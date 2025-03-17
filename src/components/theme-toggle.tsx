@@ -9,14 +9,14 @@ export function ThemeToggle() {
   return (
     <button
       onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-      className="p-2 rounded-lg text-foreground hover:text-foreground hover:bg-secondary transition-all"
-      aria-label="Toggle theme"
+      className="p-2 rounded-md text-foreground hover:text-foreground hover:bg-secondary transition-all"
+      aria-label={theme === "dark" ? "Переключить на светлую тему" : "Переключить на темную тему"}
     >
       {theme === "dark" ? (
         <svg 
           xmlns="http://www.w3.org/2000/svg" 
-          width="20" 
-          height="20" 
+          width="18" 
+          height="18" 
           viewBox="0 0 24 24" 
           fill="none" 
           stroke="currentColor" 
@@ -24,6 +24,7 @@ export function ThemeToggle() {
           strokeLinecap="round" 
           strokeLinejoin="round" 
           className="text-primary"
+          aria-hidden="true"
         >
           <circle cx="12" cy="12" r="4"></circle>
           <path d="M12 2v2"></path>
@@ -38,8 +39,8 @@ export function ThemeToggle() {
       ) : (
         <svg 
           xmlns="http://www.w3.org/2000/svg" 
-          width="20" 
-          height="20" 
+          width="18" 
+          height="18" 
           viewBox="0 0 24 24" 
           fill="none" 
           stroke="currentColor" 
@@ -47,6 +48,7 @@ export function ThemeToggle() {
           strokeLinecap="round" 
           strokeLinejoin="round" 
           className="text-primary"
+          aria-hidden="true"
         >
           <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
         </svg>
