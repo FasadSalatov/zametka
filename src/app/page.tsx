@@ -12,7 +12,11 @@ export default function Home() {
         <p className="text-lg sm:text-xl text-foreground">
           Мой личный сервис для заметок и учета финансов, по поводу багов писать в телеграм @Fasad_Salatov
         </p>
-        <div className="mt-4 sm:mt-6 flex justify-center gap-3 sm:gap-4">
+        <div className="mt-4 sm:mt-6 flex justify-center gap-3 sm:gap-4" style={{
+          paddingLeft: `var(--safe-area-inset-left)`,
+          paddingRight: `var(--safe-area-inset-right)`,
+          paddingBottom: `var(--safe-area-inset-bottom)`
+        }}>
           <Link href="/notes" className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-md px-3 sm:px-4 py-2 text-sm font-medium shadow-sm transition-colors hover-lift">Заметки</Link>
           <Link href="/finances" className="bg-secondary hover:bg-secondary/90 text-secondary-foreground rounded-md px-3 sm:px-4 py-2 text-sm font-medium shadow-sm transition-colors hover-lift">Финансы</Link>
         </div>
@@ -27,7 +31,11 @@ export default function Home() {
       </div>
       
       {/* Блоки основных функций */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6" style={{
+        paddingLeft: `var(--safe-area-inset-left)`,
+        paddingRight: `var(--safe-area-inset-right)`,
+        paddingBottom: `var(--safe-area-inset-bottom)`
+      }}>
         <div className="card p-5 sm:p-6 space-y-3 sm:space-y-4 glass hover-lift">
           <div className="icon-gradient w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center">
             <svg 

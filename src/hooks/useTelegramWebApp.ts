@@ -12,6 +12,18 @@ type TelegramWebApp = {
   ready?: () => void;
   version?: string;
   isVersionAtLeast?: (version: string) => boolean;
+  safeAreaInset?: {
+    top: number;
+    right: number;
+    bottom: number;
+    left: number;
+  };
+  contentSafeAreaInset?: {
+    top: number;
+    right: number;
+    bottom: number;
+    left: number;
+  };
 };
 
 interface Window {
@@ -28,6 +40,18 @@ export interface TelegramWebAppState {
   exitFullscreen: () => void;
   toggleFullscreen: () => void;
   version: string | null;
+  safeAreaInset: {
+    top: number;
+    right: number;
+    bottom: number;
+    left: number;
+  } | null;
+  contentSafeAreaInset: {
+    top: number;
+    right: number;
+    bottom: number;
+    left: number;
+  } | null;
 }
 
 // Минимальная версия для поддержки полноэкранного режима
@@ -39,6 +63,18 @@ export function useTelegramWebApp(): TelegramWebAppState {
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
   const [webApp, setWebApp] = useState<TelegramWebApp | null>(null);
   const [version, setVersion] = useState<string | null>(null);
+  const [safeAreaInset, setSafeAreaInset] = useState<{
+    top: number;
+    right: number;
+    bottom: number;
+    left: number;
+  } | null>(null);
+  const [contentSafeAreaInset, setContentSafeAreaInset] = useState<{
+    top: number;
+    right: number;
+    bottom: number;
+    left: number;
+  } | null>(null);
   
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -48,6 +84,15 @@ export function useTelegramWebApp(): TelegramWebAppState {
         setWebApp(tgApp);
         setIsAvailable(true);
         setVersion(tgApp.version || null);
+        
+        // Инициализируем данные safe area
+        if (tgApp.safeAreaInset) {
+          setSafeAreaInset(tgApp.safeAreaInset);
+        }
+        
+        if (tgApp.contentSafeAreaInset) {
+          setContentSafeAreaInset(tgApp.contentSafeAreaInset);
+        }
         
         // Проверяем поддержку полноэкранного режима (Bot API 8.0+)
         const supportsFullscreen = 
@@ -65,10 +110,26 @@ export function useTelegramWebApp(): TelegramWebAppState {
             setIsFullscreen(!!tgApp.isFullscreen);
           };
           
+          const onSafeAreaChanged = () => {
+            if (tgApp.safeAreaInset) {
+              setSafeAreaInset(tgApp.safeAreaInset);
+            }
+          };
+          
+          const onContentSafeAreaChanged = () => {
+            if (tgApp.contentSafeAreaInset) {
+              setContentSafeAreaInset(tgApp.contentSafeAreaInset);
+            }
+          };
+          
           tgApp.onEvent?.('fullscreenChanged', onFullscreenChanged);
+          tgApp.onEvent?.('safeAreaChanged', onSafeAreaChanged);
+          tgApp.onEvent?.('contentSafeAreaChanged', onContentSafeAreaChanged);
           
           return () => {
             tgApp.offEvent?.('fullscreenChanged', onFullscreenChanged);
+            tgApp.offEvent?.('safeAreaChanged', onSafeAreaChanged);
+            tgApp.offEvent?.('contentSafeAreaChanged', onContentSafeAreaChanged);
           };
         }
         
@@ -114,6 +175,8 @@ export function useTelegramWebApp(): TelegramWebAppState {
     requestFullscreen,
     exitFullscreen,
     toggleFullscreen,
-    version
+    version,
+    safeAreaInset,
+    contentSafeAreaInset
   };
 } 

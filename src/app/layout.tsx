@@ -11,7 +11,7 @@ const inter = Inter({ subsets: ["latin", "cyrillic"], variable: "--font-inter" }
 export const metadata: Metadata = {
   title: "Zametka - Личный сервис",
   description: "Мой личный сервис для заметок и финансов",
-  viewport: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0",
+  viewport: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0, viewport-fit=cover",
 };
 
 export default function RootLayout({
@@ -26,6 +26,45 @@ export default function RootLayout({
           src="https://telegram.org/js/telegram-web-app.js?56"
           strategy="beforeInteractive" 
         />
+        <Script id="safe-area-init" strategy="afterInteractive">
+          {`
+            // Инициализация CSS переменных safe area при загрузке страницы
+            function updateSafeArea() {
+              if (window.Telegram && window.Telegram.WebApp) {
+                const tgApp = window.Telegram.WebApp;
+                
+                // Устанавливаем переменные safe area из Telegram WebApp
+                if (tgApp.safeAreaInset) {
+                  document.documentElement.style.setProperty('--tg-safe-area-inset-top', tgApp.safeAreaInset.top + 'px');
+                  document.documentElement.style.setProperty('--tg-safe-area-inset-right', tgApp.safeAreaInset.right + 'px');
+                  document.documentElement.style.setProperty('--tg-safe-area-inset-bottom', tgApp.safeAreaInset.bottom + 'px');
+                  document.documentElement.style.setProperty('--tg-safe-area-inset-left', tgApp.safeAreaInset.left + 'px');
+                }
+                
+                // Устанавливаем переменные content safe area из Telegram WebApp
+                if (tgApp.contentSafeAreaInset) {
+                  document.documentElement.style.setProperty('--tg-content-safe-area-inset-top', tgApp.contentSafeAreaInset.top + 'px');
+                  document.documentElement.style.setProperty('--tg-content-safe-area-inset-right', tgApp.contentSafeAreaInset.right + 'px');
+                  document.documentElement.style.setProperty('--tg-content-safe-area-inset-bottom', tgApp.contentSafeAreaInset.bottom + 'px');
+                  document.documentElement.style.setProperty('--tg-content-safe-area-inset-left', tgApp.contentSafeAreaInset.left + 'px');
+                }
+                
+                // Устанавливаем обработчики событий для обновления в случае изменения safe area
+                if (tgApp.onEvent) {
+                  tgApp.onEvent('safeAreaChanged', updateSafeArea);
+                  tgApp.onEvent('contentSafeAreaChanged', updateSafeArea);
+                }
+              }
+            }
+            
+            // Запускаем инициализацию после полной загрузки страницы
+            if (document.readyState === 'complete') {
+              updateSafeArea();
+            } else {
+              window.addEventListener('load', updateSafeArea);
+            }
+          `}
+        </Script>
       </head>
       <body className={`${inter.className} antialiased overflow-x-hidden`}>
         <ThemeProvider defaultTheme="dark">

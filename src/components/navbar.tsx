@@ -16,7 +16,11 @@ export function Navbar() {
   const pathname = usePathname();
 
   return (
-    <nav className="sticky top-0 z-10 bg-background/80 backdrop-blur-xl shadow-sm">
+    <nav className="sticky top-0 z-10 bg-background/80 backdrop-blur-xl shadow-sm" style={{ 
+      paddingTop: `var(--safe-area-inset-top)`,
+      paddingLeft: `var(--safe-area-inset-left)`,
+      paddingRight: `var(--safe-area-inset-right)` 
+    }}>
       <div className="max-w-7xl mx-auto px-3 sm:px-4">
         <div className="flex justify-between h-14 sm:h-16 items-center">
           <div className="flex items-center">
