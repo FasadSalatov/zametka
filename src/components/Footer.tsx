@@ -10,9 +10,9 @@ export default function Footer() {
     <footer className="w-full border-t border-border/40 pt-3 pb-3 md:pt-4 md:pb-4 mt-auto">
       <div className="max-w-7xl mx-auto px-3 sm:px-4">
         <div className="flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-0">
-          <div className="text-xs sm:text-sm text-foreground opacity-70 order-2 sm:order-1">
+          {/* <div className="text-xs sm:text-sm text-foreground opacity-70 order-2 sm:order-1">
             &copy; {new Date().getFullYear()} Zametka
-          </div>
+          </div> */}
           
           <div className="flex items-center gap-4 sm:gap-6 order-1 sm:order-2">
             <Link

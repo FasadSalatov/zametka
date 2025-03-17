@@ -20,7 +20,7 @@ interface FinanceChartsProps {
   transactions: Transaction[];
 }
 
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#A569BD', '#EC7063', '#52BE80', '#5499C7'];
+// const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#A569BD', '#EC7063', '#52BE80', '#5499C7'];
 const EXPENSE_COLORS = ['#FF8042', '#EC7063', '#E74C3C', '#C0392B', '#D35400'];
 const INCOME_COLORS = ['#00C49F', '#52BE80', '#27AE60', '#2ECC71', '#1ABC9C'];
 

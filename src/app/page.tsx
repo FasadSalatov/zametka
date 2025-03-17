@@ -10,7 +10,7 @@ export default function Home() {
           <span className="text-gradient">Zametka</span>
         </h1>
         <p className="text-lg sm:text-xl text-foreground">
-          Мой личный сервис для заметок и учета финансов
+          Мой личный сервис для заметок и учета финансов, по поводу багов писать в телеграм @Fasad_Salatov
         </p>
         <div className="mt-4 sm:mt-6 flex justify-center gap-3 sm:gap-4">
           <Link href="/notes" className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-md px-3 sm:px-4 py-2 text-sm font-medium shadow-sm transition-colors hover-lift">Заметки</Link>
