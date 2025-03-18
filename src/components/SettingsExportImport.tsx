@@ -32,12 +32,36 @@ export default function SettingsExportImport() {
       settings: settings
     });
     
+    // Если хранилища пусты, пробуем загрузить данные из localStorage
+    if (typeof window !== "undefined" && notes.length === 0) {
+      try {
+        // Дополнительная проверка для ключа zametka_notes
+        const savedZametkaNotesString = localStorage.getItem("zametka_notes");
+        if (savedZametkaNotesString) {
+          console.log("SettingsExportImport: Найдены заметки в localStorage под ключом zametka_notes");
+          try {
+            const parsedNotes = JSON.parse(savedZametkaNotesString);
+            if (Array.isArray(parsedNotes) && parsedNotes.length > 0) {
+              console.log(`SettingsExportImport: Загружаем ${parsedNotes.length} заметок из zametka_notes`);
+              setNotes(parsedNotes);
+              // Синхронизируем данные между ключами
+              localStorage.setItem("notes", savedZametkaNotesString);
+            }
+          } catch (e) {
+            console.error("Ошибка при разборе заметок из zametka_notes:", e);
+          }
+        }
+      } catch (error) {
+        console.error("Ошибка при проверке дополнительных ключей:", error);
+      }
+    }
+    
     setLocalCounts({
       notes: notes.length,
       finances: transactions.length,
       debts: debts.length
     });
-  }, [notes, transactions, debts, settings]);
+  }, [notes.length, transactions.length, debts.length, settings, setNotes]);
   
   // Экспорт данных в файл
   const handleExport = async () => {

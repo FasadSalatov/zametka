@@ -37,6 +37,31 @@ export default function TelegramCloudStorageCard() {
       debts: debts.length 
     });
     
+    // Проверяем содержимое localStorage
+    if (typeof window !== "undefined") {
+      try {
+        const localStorageKeys = Object.keys(localStorage);
+        console.log("Ключи в localStorage:", localStorageKeys);
+        
+        // Проверяем ключи, связанные с заметками
+        const notesKeys = localStorageKeys.filter(key => key.includes("notes") || key.includes("Notes"));
+        console.log("Ключи с заметками:", notesKeys);
+        notesKeys.forEach(key => {
+          try {
+            const value = localStorage.getItem(key);
+            if (value) {
+              const parsed = JSON.parse(value);
+              console.log(`Содержимое ключа ${key}:`, Array.isArray(parsed) ? `Массив (${parsed.length})` : typeof parsed);
+            }
+          } catch (e) {
+            console.error(`Ошибка при анализе ключа ${key}:`, e);
+          }
+        });
+      } catch (error) {
+        console.error("Ошибка при анализе localStorage:", error);
+      }
+    }
+    
     setLocalCounts({
       notes: notes.length,
       finances: transactions.length,
