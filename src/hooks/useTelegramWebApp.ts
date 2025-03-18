@@ -22,6 +22,19 @@ interface CloudStorage {
   getKeys: (callback: (error: any, keys: string[]) => void) => void;
 }
 
+// Тип для диалогов и кнопок
+interface PopupButton {
+  id?: string;
+  type: 'ok' | 'close' | 'cancel' | 'default' | 'destructive';
+  text?: string;
+}
+
+interface PopupParams {
+  title: string;
+  message: string;
+  buttons: PopupButton[];
+}
+
 // Объявление типов в глобальной области видимости
 type TelegramWebApp = {
   requestFullscreen?: () => void;
@@ -46,6 +59,14 @@ type TelegramWebApp = {
   };
   HapticFeedback?: HapticFeedback;
   CloudStorage?: CloudStorage;
+  showPopup?: (params: PopupParams, callback?: (buttonId: string) => void) => void;
+  showAlert?: (message: string, callback?: () => void) => void;
+  showConfirm?: (message: string, callback?: (confirmed: boolean) => void) => void;
+  openLink?: (url: string) => void;
+  openTelegramLink?: (url: string) => void;
+  openInvoice?: (url: string, callback?: (status: 'paid' | 'cancelled' | 'failed' | 'pending') => void) => void;
+  platform?: string;
+  colorScheme?: 'light' | 'dark';
 };
 
 interface Window {
