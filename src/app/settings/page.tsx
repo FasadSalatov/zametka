@@ -1,88 +1,151 @@
 "use client";
 
-import React from 'react';
-import { ModeToggle } from '@/components/mode-toggle';
-import TelegramFullscreenButton from '@/components/TelegramFullscreenButton';
+import React, { useEffect, useState } from 'react';
 import SettingsExportImport from '@/components/SettingsExportImport';
+import { useCloudStorage } from '@/components/providers/cloud-storage-provider';
+import TelegramFullscreenButton from '@/components/TelegramFullscreenButton';
 
 export default function SettingsPage() {
+  const [theme, setTheme] = useState<string>('dark');
+  const { loadStatus, lastLoadTime } = useCloudStorage();
+
+  const totalCloudItems = loadStatus.notes.count + loadStatus.finances.count + loadStatus.debts.count;
+
+  // При монтировании получаем текущую тему
+  useEffect(() => {
+    const currentTheme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+    setTheme(currentTheme);
+  }, []);
+
+  // Обработчик смены темы
+  const handleThemeChange = (newTheme: string) => {
+    if (newTheme === 'dark') {
+      document.documentElement.classList.add('dark');
+      document.documentElement.classList.remove('light');
+    } else {
+      document.documentElement.classList.add('light');
+      document.documentElement.classList.remove('dark');
+    }
+    setTheme(newTheme);
+    
+    try {
+      localStorage.setItem('theme', newTheme);
+    } catch (e) {
+      console.error('Не удалось сохранить тему в localStorage:', e);
+    }
+  };
+
   return (
-    <div className="pb-16">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold mb-1">Настройки</h1>
-        <p className="text-sm text-muted-foreground">Управление приложением и данными</p>
-      </div>
+    <div className="container mx-auto max-w-3xl py-4">
+      <h1 className="text-2xl font-bold mb-6 text-center">Настройки</h1>
       
-      <div className="space-y-4">
-        {/* Основные настройки */}
-        <div className="bg-card rounded-lg border border-border overflow-hidden">
-          <div className="p-4 border-b border-border bg-muted/30">
-            <h2 className="text-lg font-medium">Основные настройки</h2>
-          </div>
+      <div className="space-y-8">
+        <div className="bg-card border border-border rounded-xl p-4">
+          <h2 className="text-xl font-medium mb-4">Облачные данные</h2>
           
-          <div className="divide-y divide-border">
-            {/* Тема оформления */}
-            <div className="flex items-center justify-between p-4">
-              <div>
-                <h3 className="font-medium mb-0.5">Тема оформления</h3>
-                <p className="text-xs text-muted-foreground">Светлая или темная тема</p>
-              </div>
-              <ModeToggle />
+          {/* Информационная панель о данных в облаке */}
+          <div className="mb-4 bg-muted/40 rounded-lg p-3 text-sm">
+            <div className="flex justify-between items-center mb-2">
+              <span className="font-medium">Всего элементов в облаке:</span>
+              <span className="text-primary font-medium">{totalCloudItems}</span>
             </div>
             
-            {/* Полноэкранный режим */}
-            <div className="flex items-center justify-between p-4">
-              <div>
-                <h3 className="font-medium mb-0.5">Полноэкранный режим</h3>
-                <p className="text-xs text-muted-foreground">Для Telegram Mini App</p>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-1 mt-3 text-xs text-muted-foreground">
+              <div className="flex justify-between">
+                <span>Заметки:</span>
+                <span className={loadStatus.notes.isLoaded ? "text-green-500" : ""}>
+                  {loadStatus.notes.count}
+                </span>
               </div>
-              <TelegramFullscreenButton />
+              <div className="flex justify-between">
+                <span>Финансы:</span>
+                <span className={loadStatus.finances.isLoaded ? "text-green-500" : ""}>
+                  {loadStatus.finances.count}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span>Долги:</span>
+                <span className={loadStatus.debts.isLoaded ? "text-green-500" : ""}>
+                  {loadStatus.debts.count}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span>Настройки:</span>
+                <span className={loadStatus.settings.isLoaded ? "text-green-500" : ""}>
+                  {loadStatus.settings.isLoaded ? "Да" : "Нет"}
+                </span>
+              </div>
+            </div>
+            
+            {lastLoadTime && (
+              <div className="text-xs text-muted-foreground mt-3">
+                Последняя синхронизация: {lastLoadTime}
+              </div>
+            )}
+          </div>
+          
+          <SettingsExportImport />
+        </div>
+        
+        <div className="bg-card border border-border rounded-xl p-4">
+          <h2 className="text-xl font-medium mb-4">Внешний вид</h2>
+          
+          <div className="space-y-4">
+            <div>
+              <h3 className="text-sm font-medium mb-2">Тема</h3>
+              <div className="grid grid-cols-2 gap-2">
+                <button 
+                  onClick={() => handleThemeChange('light')}
+                  className={`p-3 rounded-lg flex items-center border transition-colors ${theme === 'light' ? 'bg-primary/10 border-primary' : 'bg-muted border-border'}`}
+                  data-haptic="light"
+                >
+                  <div className="w-5 h-5 mr-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="5"></circle>
+                      <line x1="12" y1="1" x2="12" y2="3"></line>
+                      <line x1="12" y1="21" x2="12" y2="23"></line>
+                      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                      <line x1="1" y1="12" x2="3" y2="12"></line>
+                      <line x1="21" y1="12" x2="23" y2="12"></line>
+                      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                  </div>
+                  <span>Светлая</span>
+                </button>
+                
+                <button 
+                  onClick={() => handleThemeChange('dark')}
+                  className={`p-3 rounded-lg flex items-center border transition-colors ${theme === 'dark' ? 'bg-primary/10 border-primary' : 'bg-muted border-border'}`}
+                  data-haptic="light"
+                >
+                  <div className="w-5 h-5 mr-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                  </div>
+                  <span>Тёмная</span>
+                </button>
+              </div>
+            </div>
+            
+            <div>
+              <h3 className="text-sm font-medium mb-2">Полноэкранный режим</h3>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">Включить полноэкранный режим в Telegram</span>
+                <TelegramFullscreenButton />
+              </div>
             </div>
           </div>
         </div>
         
-        {/* Экспорт и импорт */}
-        <div className="bg-card rounded-lg border border-border overflow-hidden">
-          <div className="p-4 border-b border-border bg-muted/30">
-            <h2 className="text-lg font-medium">Данные</h2>
-          </div>
-          
-          <div className="p-4">
-            <SettingsExportImport 
-              onDataImported={(data) => {
-                if (typeof window !== 'undefined') {
-                  window.location.reload();
-                }
-              }}
-              onError={(error) => {
-                console.error('Ошибка при импорте/экспорте:', error);
-              }}
-            />
-          </div>
-        </div>
-        
-        {/* О приложении */}
-        <div className="bg-card rounded-lg border border-border overflow-hidden">
-          <div className="p-4 border-b border-border bg-muted/30">
-            <h2 className="text-lg font-medium">О приложении</h2>
-          </div>
-          
-          <div className="p-4">
-            <div className="space-y-3">
-              <p className="text-sm">
-                <span className="font-medium">Zametka</span> — приложение для управления заметками, 
-                финансами и долгами в Telegram
-              </p>
-              
-              <div className="flex justify-between items-center text-sm py-2 px-3 rounded bg-muted/30">
-                <span className="text-muted-foreground">Версия</span>
-                <span className="font-medium">1.0.0</span>
-              </div>
-              
-              <p className="text-xs text-muted-foreground text-center">
-                &copy; {new Date().getFullYear()}
-              </p>
-            </div>
+        <div className="bg-card border border-border rounded-xl p-4">
+          <h2 className="text-xl font-medium mb-4">О приложении</h2>
+          <div className="text-muted-foreground text-sm space-y-2">
+            <p>Версия: 1.0.0</p>
+            <p>Приложение для удобного ведения заметок, учета финансов и долгов.</p>
+            <p>Все данные хранятся в облаке Telegram и доступны на всех ваших устройствах.</p>
           </div>
         </div>
       </div>

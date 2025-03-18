@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { exportDataWithTelegram, importDataWithTelegram, saveToTelegramCloud, loadFromTelegramCloud } from '@/utils/telegramExportImport';
 import { Button } from '@/components/ui/Button';
+import { useCloudStorage } from '@/components/providers/cloud-storage-provider';
 
 // Ключи для хранения данных
 const STORAGE_KEYS = {
@@ -22,6 +23,7 @@ interface SettingsExportImportProps {
 }
 
 export default function SettingsExportImport({ onDataImported, onError }: SettingsExportImportProps) {
+  const { loadStatus, isLoading: isCloudLoading, reloadData } = useCloudStorage();
   const [loading, setLoading] = useState<{[key: string]: boolean}>({
     exportAll: false,
     importAll: false,
@@ -317,6 +319,56 @@ export default function SettingsExportImport({ onDataImported, onError }: Settin
 
   return (
     <div className="space-y-4">
+      {/* Информация о данных в облаке */}
+      <div className="bg-card border border-border rounded-lg p-3">
+        <h3 className="text-sm font-medium mb-2">Данные в облаке Telegram</h3>
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between text-xs">
+            <span>Заметки:</span>
+            <span className={loadStatus.notes.isLoaded ? "text-green-500" : "text-muted-foreground"}>
+              {loadStatus.notes.isLoaded 
+                ? `${loadStatus.notes.count} шт.` 
+                : "Не найдены"}
+            </span>
+          </div>
+          <div className="flex items-center justify-between text-xs">
+            <span>Финансы:</span>
+            <span className={loadStatus.finances.isLoaded ? "text-green-500" : "text-muted-foreground"}>
+              {loadStatus.finances.isLoaded 
+                ? `${loadStatus.finances.count} шт.` 
+                : "Не найдены"}
+            </span>
+          </div>
+          <div className="flex items-center justify-between text-xs">
+            <span>Долги:</span>
+            <span className={loadStatus.debts.isLoaded ? "text-green-500" : "text-muted-foreground"}>
+              {loadStatus.debts.isLoaded 
+                ? `${loadStatus.debts.count} шт.` 
+                : "Не найдены"}
+            </span>
+          </div>
+          <div className="flex items-center justify-between text-xs">
+            <span>Настройки:</span>
+            <span className={loadStatus.settings.isLoaded ? "text-green-500" : "text-muted-foreground"}>
+              {loadStatus.settings.isLoaded ? "Сохранены" : "Не найдены"}
+            </span>
+          </div>
+        </div>
+        
+        <div className="mt-3 text-center">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={reloadData}
+            disabled={isCloudLoading} 
+            className="text-xs h-8 w-full"
+            data-haptic="light"
+          >
+            {isCloudLoading ? 'Обновление...' : 'Обновить данные из облака'}
+          </Button>
+        </div>
+      </div>
+
       {/* Действия с данными */}
       <div className="space-y-3">
         <div className="flex flex-col gap-2">
