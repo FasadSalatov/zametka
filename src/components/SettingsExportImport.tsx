@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNotesStore } from '@/stores/notes-store';
 import { useFinancesStore } from '@/stores/finances-store';
 import { useDebtsStore } from '@/stores/debts-store';
@@ -17,11 +17,39 @@ export default function SettingsExportImport() {
   
   const [isExporting, setIsExporting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
+  const [localCounts, setLocalCounts] = useState({
+    notes: 0,
+    finances: 0,
+    debts: 0
+  });
+  
+  // Обновляем счетчики при изменении данных
+  useEffect(() => {
+    console.log('SettingsExportImport - данные:', {
+      notes: notes.length,
+      transactions: transactions.length,
+      debts: debts.length,
+      settings: settings
+    });
+    
+    setLocalCounts({
+      notes: notes.length,
+      finances: transactions.length,
+      debts: debts.length
+    });
+  }, [notes, transactions, debts, settings]);
   
   // Экспорт данных в файл
   const handleExport = async () => {
     setIsExporting(true);
     try {
+      console.log('Экспорт данных:', {
+        notes: notes.length,
+        transactions: transactions.length,
+        debts: debts.length,
+        settings: settings
+      });
+      
       const exportData: CloudData = {
         notes,
         finances: transactions,
@@ -31,6 +59,8 @@ export default function SettingsExportImport() {
       
       // Создаем JSON-строку из данных
       const dataStr = JSON.stringify(exportData, null, 2);
+      console.log('Экспортируемые данные (начало строки):', dataStr.substring(0, 100) + '...');
+      
       const blob = new Blob([dataStr], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       
@@ -83,7 +113,15 @@ export default function SettingsExportImport() {
         reader.onload = (event) => {
           try {
             const content = event.target?.result as string;
+            console.log('Импортируемые данные (начало строки):', content.substring(0, 100) + '...');
+            
             const importedData = JSON.parse(content) as CloudData;
+            console.log('Импортированные данные:', {
+              notes: importedData.notes?.length || 0,
+              finances: importedData.finances?.length || 0,
+              debts: importedData.debts?.length || 0,
+              settings: importedData.settings ? 'Есть' : 'Нет'
+            });
             
             // Базовая валидация импортированных данных
             if (!validateImportedData(importedData)) {
@@ -95,18 +133,22 @@ export default function SettingsExportImport() {
             // Применение импортированных данных
             if (importedData.notes) {
               setNotes(importedData.notes);
+              localStorage.setItem('notes', JSON.stringify(importedData.notes));
             }
             
             if (importedData.finances) {
               setTransactions(importedData.finances);
+              localStorage.setItem('finances', JSON.stringify(importedData.finances));
             }
             
             if (importedData.debts) {
               setDebts(importedData.debts);
+              localStorage.setItem('debts', JSON.stringify(importedData.debts));
             }
             
             if (importedData.settings) {
               setSettings(importedData.settings);
+              localStorage.setItem('settings', JSON.stringify(importedData.settings));
             }
             
             // Вызываем haptic feedback, если доступен
@@ -175,6 +217,23 @@ export default function SettingsExportImport() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col space-y-4">
+        <div className="border border-border rounded-md p-4 mb-4">
+          <h4 className="font-medium text-sm mb-2">Локальные данные:</h4>
+          <div className="grid grid-cols-2 gap-y-2 text-xs">
+            <div>Заметки:</div>
+            <div>{localCounts.notes}</div>
+            
+            <div>Финансы:</div>
+            <div>{localCounts.finances}</div>
+            
+            <div>Долги:</div>
+            <div>{localCounts.debts}</div>
+            
+            <div>Настройки:</div>
+            <div>{settings && Object.keys(settings).length > 0 ? 'Есть' : 'Нет'}</div>
+          </div>
+        </div>
+        
         <div className="space-y-2">
           <h3 className="text-lg font-medium">Резервное копирование</h3>
           <p className="text-sm text-muted-foreground">Экспортируйте данные в файл для создания резервной копии</p>

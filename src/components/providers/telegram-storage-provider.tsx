@@ -122,6 +122,14 @@ export const TelegramStorageProvider: React.FC<{ children: ReactNode }> = ({ chi
     setError(null);
 
     try {
+      console.log('Синхронизация данных с облаком:');
+      console.log('Данные для синхронизации:', {
+        notes: notes.length,
+        transactions: transactions.length,
+        debts: debts.length, 
+        settings: settings ? Object.keys(settings).length : 0
+      });
+
       // Сохраняем все данные в облако
       const results = await Promise.all([
         saveToCloud(STORAGE_KEYS.NOTES, notes),
@@ -129,6 +137,8 @@ export const TelegramStorageProvider: React.FC<{ children: ReactNode }> = ({ chi
         saveToCloud(STORAGE_KEYS.DEBTS, debts),
         saveToCloud(STORAGE_KEYS.SETTINGS, settings),
       ]);
+      
+      console.log('Результаты синхронизации:', results);
 
       const success = results.every(Boolean);
 
@@ -195,6 +205,12 @@ export const TelegramStorageProvider: React.FC<{ children: ReactNode }> = ({ chi
     try {
       // Загружаем все данные из облака
       const cloudData = await loadAllFromCloud();
+      console.log('Загруженные данные из облака:', {
+        notes: cloudData.notes?.length || 0,
+        finances: cloudData.finances?.length || 0,
+        debts: cloudData.debts?.length || 0,
+        settings: cloudData.settings ? 'Есть' : 'Нет'
+      });
       
       if (Object.keys(cloudData).length === 0) {
         setError('В облаке нет данных');
@@ -213,8 +229,10 @@ export const TelegramStorageProvider: React.FC<{ children: ReactNode }> = ({ chi
       const now = new Date();
       
       // Обновляем заметки
-      if (cloudData.notes) {
+      if (cloudData.notes && cloudData.notes.length > 0) {
+        console.log(`Применяем ${cloudData.notes.length} заметок из облака`);
         setNotes(cloudData.notes);
+        localStorage.setItem('notes', JSON.stringify(cloudData.notes));
         setStatus(prev => ({ 
           ...prev, 
           notes: { 
@@ -227,8 +245,10 @@ export const TelegramStorageProvider: React.FC<{ children: ReactNode }> = ({ chi
       }
       
       // Обновляем финансы
-      if (cloudData.finances) {
+      if (cloudData.finances && cloudData.finances.length > 0) {
+        console.log(`Применяем ${cloudData.finances.length} финансовых записей из облака`);
         setTransactions(cloudData.finances);
+        localStorage.setItem('finances', JSON.stringify(cloudData.finances));
         setStatus(prev => ({ 
           ...prev, 
           finances: { 
@@ -241,8 +261,10 @@ export const TelegramStorageProvider: React.FC<{ children: ReactNode }> = ({ chi
       }
       
       // Обновляем долги
-      if (cloudData.debts) {
+      if (cloudData.debts && cloudData.debts.length > 0) {
+        console.log(`Применяем ${cloudData.debts.length} долгов из облака`);
         setDebts(cloudData.debts);
+        localStorage.setItem('debts', JSON.stringify(cloudData.debts));
         setStatus(prev => ({ 
           ...prev, 
           debts: { 
@@ -256,7 +278,9 @@ export const TelegramStorageProvider: React.FC<{ children: ReactNode }> = ({ chi
       
       // Обновляем настройки
       if (cloudData.settings) {
+        console.log('Применяем настройки из облака');
         setSettings(cloudData.settings);
+        localStorage.setItem('settings', JSON.stringify(cloudData.settings));
         setStatus(prev => ({ 
           ...prev, 
           settings: { 

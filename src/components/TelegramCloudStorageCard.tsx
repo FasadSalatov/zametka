@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useTelegramStorage } from '@/components/providers/telegram-storage-provider';
 import { useNotesStore } from '@/stores/notes-store';
 import { useFinancesStore } from '@/stores/finances-store';
 import { useDebtsStore } from '@/stores/debts-store';
+import { showNotification } from '@/utils/helpers';
 
 export default function TelegramCloudStorageCard() {
   const { 
@@ -30,6 +31,12 @@ export default function TelegramCloudStorageCard() {
 
   // Обновление счетчиков локальных данных
   useEffect(() => {
+    console.log('Локальные данные обновлены:', { 
+      notes: notes.length, 
+      transactions: transactions.length, 
+      debts: debts.length 
+    });
+    
     setLocalCounts({
       notes: notes.length,
       finances: transactions.length,
@@ -38,14 +45,37 @@ export default function TelegramCloudStorageCard() {
   }, [notes, transactions, debts]);
 
   const handleSync = async () => {
-    if (!isLoading) {
-      await syncData();
+    try {
+      if (!isLoading) {
+        console.log('Синхронизация данных с облаком...');
+        console.log('Локальные данные перед синхронизацией:', {
+          notes: notes.length,
+          transactions: transactions.length,
+          debts: debts.length
+        });
+        
+        const success = await syncData();
+        if (success) {
+          showNotification('Данные успешно сохранены в облако', 'success');
+        }
+      }
+    } catch (error) {
+      console.error('Ошибка при синхронизации:', error);
+      showNotification('Произошла ошибка при синхронизации', 'error');
     }
   };
 
   const handleLoad = async () => {
-    if (!isLoading) {
-      await loadData();
+    try {
+      if (!isLoading) {
+        const success = await loadData();
+        if (success) {
+          showNotification('Данные успешно загружены из облака', 'success');
+        }
+      }
+    } catch (error) {
+      console.error('Ошибка при загрузке:', error);
+      showNotification('Произошла ошибка при загрузке данных', 'error');
     }
   };
 
