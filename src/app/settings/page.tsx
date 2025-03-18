@@ -9,7 +9,7 @@ export default function SettingsPage() {
   const [theme, setTheme] = useState<string>('dark');
   const { loadStatus, lastLoadTime } = useCloudStorage();
 
-  const totalCloudItems = loadStatus.notes.count + loadStatus.finances.count + loadStatus.debts.count;
+  const totalCloudItems = (loadStatus.notes.count || 0) + (loadStatus.finances.count || 0) + (loadStatus.debts.count || 0);
 
   // При монтировании получаем текущую тему
   useEffect(() => {

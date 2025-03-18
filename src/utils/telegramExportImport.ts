@@ -1,306 +1,378 @@
 "use client";
 
-/**
- * Утилиты для экспорта и импорта данных с использованием Telegram WebApp API
- */
+import { Note } from "@/app/notes/types";
+import { Transaction } from "@/app/finances/types";
+import { Debt } from "@/app/debts/types";
+import { showNotification } from "@/utils/helpers";
+
+export type ZametkaData = {
+  notes?: Note[];
+  finances?: Transaction[];
+  debts?: Debt[];
+  settings?: Record<string, any>;
+};
+
+// Ключи для хранения данных в Telegram Cloud Storage
+export const STORAGE_KEYS = {
+  NOTES: 'zametka_notes',
+  FINANCES: 'zametka_finances',
+  DEBTS: 'zametka_debts',
+  SETTINGS: 'zametka_settings',
+  LAST_SYNC: 'zametka_last_sync',
+};
 
 /**
- * Экспортирует данные через Telegram WebApp, создавая файл и открывая его
- * @param data Данные для экспорта
- * @param filename Имя файла
+ * Проверяет доступность Telegram WebApp API
  */
-export async function exportDataWithTelegram(data: any, filename: string): Promise<boolean> {
-  if (typeof window === 'undefined' || !window.Telegram?.WebApp) {
-    console.error('Telegram WebApp API недоступен');
+export function isTelegramWebAppAvailable(): boolean {
+  try {
+    return typeof window !== 'undefined' && 
+           !!window.Telegram && 
+           !!window.Telegram.WebApp && 
+           !!window.Telegram.WebApp.version;
+  } catch (e) {
+    console.error('Ошибка при проверке Telegram WebApp API:', e);
     return false;
   }
-  
-  const tgApp = window.Telegram.WebApp;
-  
+}
+
+/**
+ * Проверяет доступность CloudStorage API
+ */
+export function isCloudStorageAvailable(): boolean {
   try {
-    // Конвертируем данные в JSON строку
-    const jsonString = JSON.stringify(data, null, 2);
-    
-    // Создаем Blob и URL для скачивания
-    const blob = new Blob([jsonString], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    
-    // Используем Telegram API для открытия ссылки
     // @ts-ignore
-    if (tgApp.openLink) {
-      // @ts-ignore
-      // Подтверждаем действие через Telegram UI
-      tgApp.showConfirm(
-        'Экспортировать ваши данные в файл? Вы сможете импортировать их позже.', 
-        (confirmed: boolean) => {
-          if (confirmed) {
-            // Открываем ссылку для скачивания
-            // @ts-ignore
-            tgApp.openLink(url);
-            
-            // Активируем вибрацию
-            // @ts-ignore
-            if (tgApp.HapticFeedback) {
-              // @ts-ignore
-              tgApp.HapticFeedback.impactOccurred('medium');
-            }
-            
-            // Показываем уведомление об успешном экспорте
-            // @ts-ignore
-            tgApp.showPopup({
-              title: 'Успешно',
-              message: 'Данные экспортированы. Сохраните файл, чтобы не потерять его.',
-              buttons: [{type: 'ok'}]
-            });
-          }
-        }
-      );
-      return true;
-    } else {
-      // Запасной вариант, если openLink недоступен
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      return true;
+    return isTelegramWebAppAvailable() &&   
+           // @ts-ignore
+           !!window.Telegram.WebApp.CloudStorage && 
+           // @ts-ignore
+           typeof window.Telegram.WebApp.CloudStorage.getItem === 'function' &&
+           // @ts-ignore
+           typeof window.Telegram.WebApp.CloudStorage.setItem === 'function';
+  } catch (e) {
+    console.error('Ошибка при проверке CloudStorage API:', e);
+    return false;
+  }
+}
+
+/**
+ * Сохраняет данные в Telegram CloudStorage
+ * @param key Ключ для сохранения
+ * @param data Данные для сохранения
+ * @returns Promise<boolean>
+ */
+export async function saveToTelegramCloud(key: string, data: any): Promise<boolean> {
+  try {
+    if (!isCloudStorageAvailable()) {
+      console.warn('CloudStorage API недоступен');
+      return false;
+    }
+
+    // @ts-ignore
+        const tgApp = window.Telegram.WebApp;
+    const dataStr = JSON.stringify(data);
+    
+    // Проверка лимита размера данных (150KB для CloudStorage)
+    if (dataStr.length > 150 * 1024) {
+      console.error(`Данные для ${key} слишком большие: ${dataStr.length} байт. Лимит: 150KB`);
+      showNotification(`Ошибка: Данные для ${key} слишком большие (${Math.round(dataStr.length / 1024)}KB). Лимит: 150KB`, "error");
+      return false;
+    }
+    
+    // Сохраняем данные в CloudStorage
+    await tgApp.CloudStorage.setItem(key, dataStr);
+    
+    // Обновляем время последней синхронизации
+    await tgApp.CloudStorage.setItem(STORAGE_KEYS.LAST_SYNC, String(Date.now()));
+    
+    // Выводим хэш данных для отладки
+    const hash = await computeDataHash(dataStr);
+    console.log(`Сохранено в CloudStorage: ${key} (hash: ${hash})`);
+    
+    // Haptic feedback если доступен
+    if (tgApp.HapticFeedback) {
+      tgApp.HapticFeedback.notificationOccurred('success');
+    }
+    
+    return true;
+  } catch (error) {
+    console.error(`Ошибка при сохранении ${key} в Telegram Cloud:`, error);
+    showNotification(`Ошибка при сохранении данных ${key} в облако Telegram`, "error");
+    return false;
+  }
+}
+
+/**
+ * Загружает данные из Telegram CloudStorage
+ * @param key Ключ для загрузки
+ * @returns Promise<T | null>
+ */
+export async function loadFromTelegramCloud<T>(key: string): Promise<T | null> {
+  try {
+    if (!isCloudStorageAvailable()) {
+      console.warn('CloudStorage API недоступен');
+      return null;
+    }
+
+    // @ts-ignore
+    const tgApp = window.Telegram.WebApp;
+    const dataStr = await tgApp.CloudStorage.getItem(key);
+    
+    if (!dataStr) {
+      console.log(`Данные ${key} не найдены в Telegram Cloud`);
+      return null;
+    }
+    
+    // Выводим хэш данных для отладки
+    const hash = await computeDataHash(dataStr);
+    console.log(`Загружено из CloudStorage: ${key} (hash: ${hash}, размер: ${dataStr.length} байт)`);
+    
+    try {
+      const parsedData = JSON.parse(dataStr) as T;
+      return parsedData;
+    } catch (parseError) {
+      console.error(`Ошибка при разборе данных для ${key}:`, parseError);
+      showNotification(`Ошибка при разборе данных ${key} из облака Telegram`, "error");
+      return null;
     }
   } catch (error) {
-    console.error('Ошибка экспорта данных:', error);
-    
-    // Показываем ошибку через Telegram UI, если доступно
-    // @ts-ignore
-    if (tgApp.showPopup) {
-      // @ts-ignore
-      tgApp.showPopup({
-        title: 'Ошибка экспорта',
-        message: 'Не удалось экспортировать данные. Попробуйте еще раз или обратитесь в поддержку.',
-        buttons: [{type: 'ok'}]
-      });
+    console.error(`Ошибка при загрузке ${key} из Telegram Cloud:`, error);
+    return null;
+  }
+}
+
+/**
+ * Вычисляет хеш данных для отладки
+ * @param data Строка данных
+ * @returns Promise<string>
+ */
+async function computeDataHash(data: string): Promise<string> {
+  try {
+    if (typeof crypto === 'undefined' || !crypto.subtle) {
+      // Простой fallback для хэша, если WebCrypto недоступен
+      return String(data.length);
     }
+    
+    const encoder = new TextEncoder();
+    const dataBuffer = encoder.encode(data);
+    const hashBuffer = await crypto.subtle.digest('SHA-1', dataBuffer);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    return hashHex.slice(0, 8); // Сокращенный хеш для удобства
+  } catch (e) {
+    console.warn('Не удалось вычислить хеш данных:', e);
+    return String(data.length);
+  }
+}
+
+/**
+ * Создает объект с данными приложения для экспорта
+ */
+export function createExportData(
+  notes?: Note[], 
+  finances?: Transaction[], 
+  debts?: Debt[],
+  settings?: Record<string, any>
+): ZametkaData {
+  return {
+    notes: notes || [],
+    finances: finances || [],
+    debts: debts || [],
+    settings: settings || {},
+  };
+}
+
+/**
+ * Экспортирует данные в файл
+ */
+export function exportDataToFile(data: ZametkaData, filename = 'zametka_backup.json') {
+  try {
+    // Создаем JSON-строку из данных
+    const dataStr = JSON.stringify(data, null, 2);
+    const blob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    
+    // Создаем ссылку для скачивания
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    
+    // Очищаем
+    setTimeout(() => {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 100);
+    
+    // Вызываем haptic feedback, если доступен
+    // @ts-ignore
+    if (isTelegramWebAppAvailable() && window.Telegram.WebApp.HapticFeedback) {
+      // @ts-ignore
+      window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+    }
+    
+    showNotification('Данные успешно экспортированы', 'success');
+    return true;
+  } catch (error) {
+    console.error('Ошибка при экспорте данных:', error);
+    showNotification('Ошибка при экспорте данных', 'error');
     return false;
   }
 }
 
 /**
- * Импортирует данные через Telegram WebApp
+ * Импортирует данные из файла
  */
-export async function importDataWithTelegram(): Promise<any> {
-  if (typeof window === 'undefined' || !window.Telegram?.WebApp) {
-    console.error('Telegram WebApp API недоступен');
-    return null;
-  }
-  
-  const tgApp = window.Telegram.WebApp;
-  
-  return new Promise((resolve, reject) => {
+export function importDataFromFile(): Promise<ZametkaData | null> {
+  return new Promise((resolve) => {
     try {
-      // Подтверждаем действие через Telegram UI
-      // @ts-ignore
-      tgApp.showConfirm(
-        'Восстановить данные из файла? Это заменит все ваши текущие данные.', 
-        (confirmed: boolean) => {
-          if (confirmed) {
-            // Создаем невидимый input для выбора файла
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = 'application/json';
-            input.style.display = 'none';
+      // Создаем скрытый input для выбора файла
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'application/json';
+      
+      input.onchange = (e) => {
+        const file = (e.target as HTMLInputElement).files?.[0];
+        if (!file) {
+          showNotification('Файл не выбран', 'warning');
+          resolve(null);
+          return;
+        }
+        
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          try {
+            const content = event.target?.result as string;
+            const importedData = JSON.parse(content) as ZametkaData;
             
-            input.onchange = (event) => {
-              const file = (event.target as HTMLInputElement).files?.[0];
-              if (!file) {
-                reject(new Error('Файл не выбран'));
-                return;
-              }
-              
-              const reader = new FileReader();
-              reader.onload = (e) => {
-                try {
-                  const content = e.target?.result as string;
-                  const data = JSON.parse(content);
-                  
-                  // Проверяем, что данные соответствуют формату
-                  if (!isValidImportData(data)) {
-                    throw new Error('Неверный формат файла');
-                  }
-                  
-                  // Активируем вибрацию
-                  // @ts-ignore
-                  if (tgApp.HapticFeedback) {
-                    // @ts-ignore
-                    tgApp.HapticFeedback.notificationOccurred('success');
-                  }
-                  
-                  // Показываем успешное сообщение
-                  // @ts-ignore
-                  if (tgApp.showPopup) {
-                    // @ts-ignore
-                    tgApp.showPopup({
-                      title: 'Успешно',
-                      message: 'Данные импортированы. Перезагрузка страницы...',
-                      buttons: [{type: 'ok'}]
-                    });
-                  }
-                  
-                  // Возвращаем импортированные данные
-                  resolve(data);
-                } catch (error) {
-                  // Активируем вибрацию ошибки
-                  // @ts-ignore
-                  if (tgApp.HapticFeedback) {
-                    // @ts-ignore
-                    tgApp.HapticFeedback.notificationOccurred('error');
-                  }
-                  
-                  // @ts-ignore
-                  if (tgApp.showPopup) {
-                    // @ts-ignore
-                    tgApp.showPopup({
-                      title: 'Ошибка импорта',
-                      message: 'Выбранный файл не содержит корректных данных для восстановления.',
-                      buttons: [{type: 'ok'}]
-                    });
-                  }
-                  reject(new Error('Неверный формат файла'));
-                }
-              };
-              
-              reader.onerror = () => {
-                // Активируем вибрацию ошибки
-                // @ts-ignore
-                if (tgApp.HapticFeedback) {
-                  // @ts-ignore
-                  tgApp.HapticFeedback.notificationOccurred('error');
-                }
-                
-                // @ts-ignore
-                if (tgApp.showPopup) {
-                  // @ts-ignore
-                  tgApp.showPopup({
-                    title: 'Ошибка импорта',
-                    message: 'Не удалось прочитать файл. Проверьте доступ к файлу.',
-                    buttons: [{type: 'ok'}]
-                  });
-                }
-                reject(new Error('Не удалось прочитать файл'));
-              };
-              
-              reader.readAsText(file);
-            };
-            
-            // Активируем вибрацию
-            // @ts-ignore
-            if (tgApp.HapticFeedback) {
-              // @ts-ignore
-              tgApp.HapticFeedback.impactOccurred('medium');
+            // Базовая валидация импортированных данных
+            if (!validateImportedData(importedData)) {
+              showNotification('Неверный формат файла данных', 'error');
+              resolve(null);
+              return;
             }
             
-            // Запускаем выбор файла
-            document.body.appendChild(input);
-            input.click();
-            document.body.removeChild(input);
-          } else {
-            reject(new Error('Импорт отменен пользователем'));
-          }
-        }
-      );
-    } catch (error) {
-      console.error('Ошибка импорта данных:', error);
-      reject(error);
-    }
-  });
-}
-
-/**
- * Сохраняет данные в облачное хранилище Telegram
- * @param key Ключ для сохранения
- * @param value Значение для сохранения (будет сериализовано в JSON)
- */
-export async function saveToTelegramCloud(key: string, value: any): Promise<boolean> {
-  // @ts-ignore
-  if (typeof window === 'undefined' || !window.Telegram?.WebApp?.CloudStorage) {
-    console.error('Telegram CloudStorage API недоступен');
-    return false;
-  }
-  
-  return new Promise((resolve) => {
-    try {
-      const serializedValue = typeof value === 'string' ? value : JSON.stringify(value);
-      // @ts-ignore
-      window.Telegram.WebApp.CloudStorage.setItem(key, serializedValue, (error, success) => {
-        if (error || !success) {
-          console.error('Ошибка сохранения в облако:', error);
-          resolve(false);
-        } else {
-          resolve(true);
-        }
-      });
-    } catch (error) {
-      console.error('Ошибка сохранения в облако:', error);
-      resolve(false);
-    }
-  });
-}
-
-/**
- * Загружает данные из облачного хранилища Telegram
- * @param key Ключ для загрузки
- */
-export async function loadFromTelegramCloud(key: string): Promise<any> {
-  // @ts-ignore
-  if (typeof window === 'undefined' || !window.Telegram?.WebApp?.CloudStorage) {
-    console.error('Telegram CloudStorage API недоступен');
-    return null;
-  }
-  
-  return new Promise((resolve) => {
-    try {
-      // @ts-ignore
-      window.Telegram.WebApp.CloudStorage.getItem(key, (error, value) => {
-        if (error) {
-          console.error('Ошибка загрузки из облака:', error);
-          resolve(null);
-        } else {
-          if (!value) {
+            // Вызываем haptic feedback, если доступен
+            // @ts-ignore
+            if (isTelegramWebAppAvailable() && window.Telegram.WebApp.HapticFeedback) {
+              // @ts-ignore
+              window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+            }
+            
+            showNotification('Данные успешно импортированы', 'success');
+            resolve(importedData);
+          } catch (error) {
+            console.error('Ошибка при разборе импортированного файла:', error);
+            showNotification('Ошибка при разборе файла данных', 'error');
             resolve(null);
-            return;
           }
-          
-          try {
-            // Пробуем распарсить как JSON
-            const parsedValue = JSON.parse(value);
-            resolve(parsedValue);
-          } catch {
-            // Если не получилось, возвращаем как строку
-            resolve(value);
-          }
+        };
+        
+        reader.onerror = () => {
+          showNotification('Ошибка при чтении файла', 'error');
+          resolve(null);
+        };
+        
+        reader.readAsText(file);
+      };
+      
+      // Удаляем элемент после выбора файла
+      input.onabort = () => {
+        document.body.removeChild(input);
+        resolve(null);
+      };
+      
+      document.body.appendChild(input);
+      input.click();
+      
+      // Это необходимо для iOS Safari
+      setTimeout(() => {
+        if (document.body.contains(input)) {
+          document.body.removeChild(input);
         }
-      });
+      }, 5000);
     } catch (error) {
-      console.error('Ошибка загрузки из облака:', error);
+      console.error('Ошибка при импорте данных:', error);
+      showNotification('Ошибка при импорте данных', 'error');
       resolve(null);
     }
   });
 }
 
 /**
- * Проверяет, что данные соответствуют ожидаемому формату для импорта
+ * Валидирует импортированные данные
  */
-function isValidImportData(data: any): boolean {
-  // Проверяем, что данные содержат хотя бы один из ожидаемых ключей
-  const hasExpectedKeys = 
-    Array.isArray(data.notes) || 
-    Array.isArray(data.finances) || 
-    Array.isArray(data.debts) || 
-    (data.settings && typeof data.settings === 'object');
+function validateImportedData(data: any): data is ZametkaData {
+  // Проверяем, что data - объект
+  if (!data || typeof data !== 'object') return false;
   
-  // Проверяем, что данные имеют ожидаемый формат (версия или дата экспорта)
-  const hasMetadata = 
-    (data.version && typeof data.version === 'string') || 
-    (data.exportDate && typeof data.exportDate === 'string');
+  // Проверяем основные поля
+  if (
+    (data.notes !== undefined && !Array.isArray(data.notes)) ||
+    (data.finances !== undefined && !Array.isArray(data.finances)) ||
+    (data.debts !== undefined && !Array.isArray(data.debts)) ||
+    (data.settings !== undefined && typeof data.settings !== 'object')
+  ) {
+    return false;
+  }
   
-  return hasExpectedKeys && hasMetadata;
+  return true;
+}
+
+// Тип данных о доступности CloudStorage
+export type CloudStorageStats = {
+  enabled: boolean;
+  items: Record<string, number | null>;
+  lastSync: number | null;
+};
+
+// Получает информацию о данных, хранящихся в CloudStorage
+export async function getCloudStorageStats(): Promise<CloudStorageStats> {
+  if (!isCloudStorageAvailable()) {
+    return {
+      enabled: false,
+      items: {},
+      lastSync: null
+    };
+  }
+  
+  try {
+    // @ts-ignore
+     const tgApp = window.Telegram.WebApp;
+    
+    // Получаем время последней синхронизации
+    const lastSyncStr = await tgApp.CloudStorage.getItem(STORAGE_KEYS.LAST_SYNC);
+    const lastSync = lastSyncStr ? parseInt(lastSyncStr, 10) : null;
+    
+    // Получаем количество элементов для каждого типа данных
+    const notesStr = await tgApp.CloudStorage.getItem(STORAGE_KEYS.NOTES);
+    const financesStr = await tgApp.CloudStorage.getItem(STORAGE_KEYS.FINANCES);
+    const debtsStr = await tgApp.CloudStorage.getItem(STORAGE_KEYS.DEBTS);
+    const settingsStr = await tgApp.CloudStorage.getItem(STORAGE_KEYS.SETTINGS);
+    
+    // Вычисляем количество элементов в каждом хранилище
+    const notesCount = notesStr ? (JSON.parse(notesStr) as Note[]).length : null;
+    const financesCount = financesStr ? (JSON.parse(financesStr) as Transaction[]).length : null;
+    const debtsCount = debtsStr ? (JSON.parse(debtsStr) as Debt[]).length : null;
+    const settingsAvailable = settingsStr ? true : false;
+    
+    return {
+      enabled: true,
+      items: {
+        [STORAGE_KEYS.NOTES]: notesCount,
+        [STORAGE_KEYS.FINANCES]: financesCount,
+        [STORAGE_KEYS.DEBTS]: debtsCount,
+        [STORAGE_KEYS.SETTINGS]: settingsAvailable ? 1 : 0
+      },
+      lastSync
+    };
+  } catch (error) {
+    console.error('Ошибка при получении статистики CloudStorage:', error);
+    return {
+      enabled: true,
+      items: {},
+      lastSync: null
+    };
+  }
 } 

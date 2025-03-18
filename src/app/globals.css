@@ -3,725 +3,272 @@
 @tailwind utilities;
 
 :root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
-  --card: #ffffff;
-  --card-foreground: #0f172a;
-  --primary: #d32f2f;
-  --primary-foreground: #ffffff;
-  --secondary: #f1f5f9;
-  --secondary-foreground: #0f172a;
-  --border: #e2e8f0;
-  --input: #e2e8f0;
-  --ring: #d32f2f;
-  --radius: 0.75rem;
-  --accent: #9c1f1f;
-  --accent-foreground: #ffffff;
-  --shadow-color: rgba(0, 0, 0, 0.1);
-  --shadow-color-hover: rgba(0, 0, 0, 0.2);
-  --glow-color: rgba(211, 47, 47, 0.25);
-  --card-gradient: linear-gradient(135deg, #fff, #f5f5f5);
-  --card-premium-gradient: linear-gradient(135deg, #f5f5f5, #ececec);
+  /* Основные цвета темы */
+  --background: 240 10% 3.9%;
+  --foreground: 0 0% 98%;
   
-  /* Safe Area по умолчанию для iOS */
+  --card: 240 10% 6%;
+  --card-foreground: 0 0% 98%;
+  
+  --popover: 240 10% 7%;
+  --popover-foreground: 0 0% 98%;
+  
+  --primary: 252 66% 62%;
+  --primary-foreground: 0 0% 100%;
+  
+  --secondary: 240 4% 16%;
+  --secondary-foreground: 0 0% 98%;
+  
+  --muted: 240 4% 16%;
+  --muted-foreground: 240 5% 65%;
+  
+  --accent: 252 66% 14%;
+  --accent-foreground: 252 66% 76%;
+  
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 98%;
+  
+  --border: 240 4% 16%;
+  --input: 240 4% 16%;
+  --ring: 252 66% 62%;
+  
+  --radius: 0.5rem;
+  
+  /* Safe area insets для учета вырезов и системных UI элементов */
   --safe-area-inset-top: env(safe-area-inset-top, 0px);
   --safe-area-inset-right: env(safe-area-inset-right, 0px);
   --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
   --safe-area-inset-left: env(safe-area-inset-left, 0px);
   
-  /* Telegram Safe Area переменные для совместимости */
-  /* Эти переменные будут заполнены скриптом из Telegram WebApp API */
+  /* Переменные для Telegram Mini App safe area */
   --tg-safe-area-inset-top: 0px;
   --tg-safe-area-inset-right: 0px;
   --tg-safe-area-inset-bottom: 0px;
   --tg-safe-area-inset-left: 0px;
   
+  /* Переменные для content safe area в Telegram */
   --tg-content-safe-area-inset-top: 0px;
   --tg-content-safe-area-inset-right: 0px;
   --tg-content-safe-area-inset-bottom: 0px;
   --tg-content-safe-area-inset-left: 0px;
   
-  /* Используем максимальное значение из CSS env() и Telegram API */
-  --combined-safe-area-inset-top: max(var(--safe-area-inset-top), var(--tg-safe-area-inset-top));
-  --combined-safe-area-inset-right: max(var(--safe-area-inset-right), var(--tg-safe-area-inset-right));
-  --combined-safe-area-inset-bottom: max(var(--safe-area-inset-bottom), var(--tg-safe-area-inset-bottom));
-  --combined-safe-area-inset-left: max(var(--safe-area-inset-left), var(--tg-safe-area-inset-left));
+  /* Комбинированные safe area переменные (максимум из CSS и Telegram) */
+  --combined-safe-area-inset-top: var(--safe-area-inset-top);
+  --combined-safe-area-inset-right: var(--safe-area-inset-right);
+  --combined-safe-area-inset-bottom: var(--safe-area-inset-bottom);
+  --combined-safe-area-inset-left: var(--safe-area-inset-left);
 }
 
-.dark {
-  --background: #0c0c0c;
-  --foreground: #e5e5e5;
-  --card: #111111;
-  --card-foreground: #e5e5e5;
-  --primary: #ff5252;
-  --primary-foreground: #121212;
-  --secondary: #1a1a1a;
-  --secondary-foreground: #e5e5e5;
-  --border: #222222;
-  --input: #222222;
-  --ring: #ff5252;
-  --accent: #b91c1c;
-  --accent-foreground: #ffffff;
-  --shadow-color: rgba(0, 0, 0, 0.5);
-  --shadow-color-hover: rgba(0, 0, 0, 0.7);
-  --glow-color: rgba(255, 82, 82, 0.4);
-  --card-gradient: none;
-  --card-premium-gradient: linear-gradient(135deg, #111, #222);
+/* Стили для светлой темы */
+.light {
+  --background: 0 0% 98%;
+  --foreground: 240 10% 3.9%;
+  
+  --card: 0 0% 100%;
+  --card-foreground: 240 10% 3.9%;
+  
+  --popover: 0 0% 100%;
+  --popover-foreground: 240 10% 3.9%;
+  
+  --primary: 252 66% 62%;
+  --primary-foreground: 0 0% 100%;
+  
+  --secondary: 240 4.8% 95.9%;
+  --secondary-foreground: 240 5.9% 10%;
+  
+  --muted: 240 4.8% 95.9%;
+  --muted-foreground: 240 3.8% 46.1%;
+  
+  --accent: 252 66% 92%;
+  --accent-foreground: 252 66% 42%;
+  
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 0 0% 98%;
+  
+  --border: 240 5.9% 90%;
+  --input: 240 5.9% 90%;
+  --ring: 252 66% 62%;
 }
 
-  body {
-  background-color: var(--background);
-  color: var(--foreground);
-    font-feature-settings: "rlig" 1, "calt" 1;
-  transition: background-color 0.5s ease;
-}
-
-.container {
-  max-width: 80rem;
-  margin-left: auto;
-  margin-right: auto;
-  padding-left: 1rem;
-  padding-right: 1rem;
-}
-
-.card {
-  background-color: var(--card);
-  color: var(--card-foreground);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  box-shadow: 0 10px 20px var(--shadow-color);
-  transition: all 500ms cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-  overflow: hidden;
-  background-image: var(--card-gradient);
-}
-
-.card::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, var(--primary));
-  transition: 0.8s;
-  z-index: 1;
-}
-
-.card:hover::before {
-  left: 100%;
-}
-
-.card::after {
-  content: "";
-  position: absolute;
-  bottom: 0;
-  right: -100%;
-  width: 100%;
-  height: 2px;
-  background: linear-gradient(270deg, transparent, var(--primary));
-  transition: 0.8s;
-  transition-delay: 0.2s;
-  z-index: 1;
-}
-
-.card:hover::after {
-  right: 100%;
-}
-
-.card:hover {
-  box-shadow: 0 15px 40px var(--shadow-color-hover);
-  transform: translateY(-5px);
-  border-color: var(--primary);
-  border-width: 1px;
-  border-style: solid;
-}
-
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--radius);
-  font-weight: 500;
-  transition: all 350ms cubic-bezier(0.4, 0, 0.2, 1);
-  padding: 0.625rem 1.25rem;
-  position: relative;
-  overflow: hidden;
-}
-
-.btn-primary {
-  background-color: var(--primary);
-  color: var(--primary-foreground);
-  position: relative;
-  overflow: hidden;
-}
-
-.btn-primary::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-  transition: 0.5s;
-}
-
-.btn-primary:hover::before {
-  left: 100%;
-}
-
-.btn-primary:hover {
-  transform: scale(1.05);
-  box-shadow: 0 10px 25px var(--glow-color);
-}
-
-.btn-primary:focus {
-  outline: none;
-  box-shadow: 0 0 0 3px var(--glow-color), 0 0 0 6px var(--background);
-}
-
-.icon-gradient {
-  background: linear-gradient(to top right, var(--primary), rgba(255, 82, 82, 0.7));
-  color: white;
-}
-
-.text-gradient {
-  background-image: linear-gradient(to right, var(--primary), #ff7b7b);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-
-.fancy-border {
-  position: relative;
-}
-
-.fancy-border::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  padding: 1px;
-  border-radius: inherit;
-  background: linear-gradient(to top right, var(--glow-color), rgba(255, 82, 82, 0.1));
-  z-index: -1;
-}
-
-/* Анимации */
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.7;
-  }
-}
-
-@keyframes pulseGlow {
-  0%, 100% {
-    box-shadow: 0 0 10px var(--glow-color);
-  }
-  50% {
-    box-shadow: 0 0 20px var(--glow-color);
-  }
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(15px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes fadeInScale {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-@keyframes slideInLeft {
-  from {
-    opacity: 0;
-    transform: translateX(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-@keyframes slideInRight {
-  from {
-    opacity: 0;
-    transform: translateX(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@keyframes shimmer {
-  0% {
-    background-position: -200% 0;
-  }
-  100% {
-    background-position: 200% 0;
-  }
-}
-
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-8px);
-  }
-}
-
-@keyframes glow {
-  0%, 100% {
-    filter: brightness(1) drop-shadow(0 0 5px var(--glow-color));
-  }
-  50% {
-    filter: brightness(1.1) drop-shadow(0 0 15px var(--glow-color));
-  }
-}
-
-.animate-fadeIn {
-  animation: fadeIn 0.5s ease forwards;
-}
-
-.animate-slideInLeft {
-  animation: slideInLeft 0.5s ease forwards;
-}
-
-.animate-slideInRight {
-  animation: slideInRight 0.5s ease forwards;
-}
-
-.animate-fadeInScale {
-  animation: fadeInScale 0.5s ease forwards;
-}
-
-.animate-pulse {
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-.animate-pulseGlow {
-  animation: pulseGlow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-.animate-spin {
-  animation: spin 1s linear infinite;
-}
-
-.animate-float {
-  animation: float 3s ease-in-out infinite;
-}
-
-.animate-glow {
-  animation: glow 2s ease-in-out infinite;
-}
-
-/* Дополнительные стили */
-.glass {
-  background: rgba(var(--card) / 0.8);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-}
-
-.dark .glass {
-  background: rgba(17, 17, 17, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.shimmer {
-  position: relative;
-  overflow: hidden;
-  background: var(--card);
-  border-radius: var(--radius);
-}
-
-.shimmer::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, 
-    transparent, 
-    rgba(255, 255, 255, 0.2), 
-    transparent
-  );
-  background-size: 200% 100%;
-  animation: shimmer 2s infinite;
-}
-
-.dark .shimmer::after {
-  background: linear-gradient(90deg, 
-    transparent, 
-    rgba(255, 255, 255, 0.1), 
-    transparent
-  );
-}
-
-/* Эффекты наведения */
-.hover-glow:hover {
-  box-shadow: 0 0 20px var(--glow-color);
-}
-
-.hover-scale:hover {
-  transform: scale(1.05);
-}
-
-.hover-rotate:hover {
-  transform: rotate(2deg);
-}
-
-.hover-lift {
-  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.hover-lift:hover {
-  transform: translateY(-7px);
-}
-
-/* Отключаем hover-эффекты на мобильных устройствах */
-@media (hover: none) {
-  .hover-lift:hover {
-    transform: none;
+/* Базовые стили */
+@layer base {
+  * {
+    @apply border-border;
   }
   
+  body {
+    @apply bg-background text-foreground;
+    overflow-x: hidden;
+  }
+  
+  h1 {
+    @apply text-2xl font-bold;
+  }
+  
+  h2 {
+    @apply text-xl font-semibold;
+  }
+  
+  h3 {
+    @apply text-lg font-medium;
+  }
+}
+
+/* Компоненты и кастомные классы */
+@layer components {
+  /* Карточки */
+  .card {
+    @apply bg-card text-card-foreground rounded-xl border border-border p-4 shadow-sm transition-all duration-200;
+  }
+  
+  .card-hover {
+    @apply hover:shadow-md hover:bg-accent/5;
+  }
+  
+  /* Кнопки */
+  .btn {
+    @apply px-4 py-2 rounded-lg font-medium transition-all duration-200 
+           focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2
+           disabled:opacity-70 disabled:cursor-not-allowed text-sm;
+  }
+  
+  .btn-primary {
+    @apply bg-primary text-primary-foreground hover:bg-primary/90 
+           shadow-sm hover:shadow active:scale-[0.98];
+  }
+  
+  .btn-secondary {
+    @apply bg-secondary text-secondary-foreground hover:bg-secondary/80;
+  }
+  
+  .btn-outline {
+    @apply bg-transparent border border-border hover:bg-accent/5
+           text-foreground;
+  }
+  
+  .btn-ghost {
+    @apply bg-transparent hover:bg-muted/20 text-foreground;
+  }
+  
+  .btn-destructive {
+    @apply bg-destructive text-destructive-foreground hover:bg-destructive/90;
+  }
+  
+  .btn-link {
+    @apply bg-transparent underline-offset-4 hover:underline text-primary p-0;
+  }
+  
+  /* Анимации */
+  .fade-in {
+    animation: fadeIn 0.3s ease-in-out;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  
+  /* Классы для различных эффектов при наведении */
+  .hover-lift {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  
+  .hover-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  }
+  
+  .hover-rotate {
+    transition: transform 0.3s ease;
+  }
+  
+  .hover-rotate:hover {
+    transform: rotate(5deg);
+  }
+}
+
+/* Утилиты */
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+/* Классы для отключения hover-эффектов на сенсорных устройствах */
+@media (hover: none) {
+  .hover-lift:hover,
+  .card-hover:hover,
   .btn-primary:hover {
     transform: none;
     box-shadow: none;
   }
   
-  .btn-primary:active {
-    transform: scale(0.95);
-    background-color: var(--accent);
-  }
-  
-  .card:hover {
-    transform: none;
-    box-shadow: 0 5px 15px var(--shadow-color);
-  }
-  
-  .card:active {
+  .btn-primary:active,
+  .card-hover:active,
+  .hover-lift:active {
     transform: scale(0.98);
   }
   
-  .btn-neon:hover {
+  .hover-rotate:hover {
     transform: none;
-    box-shadow: none;
-  }
-  
-  .btn-neon:active {
-    transform: scale(0.95);
   }
 }
 
-/* Стили для сенсорных устройств */
-.touch-device .hover-lift:hover {
-  transform: none;
-}
-
-.touch-device .hover-lift:active {
-  transform: scale(0.98);
-}
-
+/* Классы для устройств с сенсорным экраном */
+.touch-device .hover-lift:hover,
+.touch-device .card-hover:hover,
 .touch-device .btn-primary:hover {
-  transform: none;
-  box-shadow: none;
+  transform: none !important;
+  box-shadow: none !important;
 }
 
-.touch-device .btn-primary:active {
-  transform: scale(0.95);
-  background-color: var(--accent);
-  transition: transform 0.1s, background-color 0.2s;
+.touch-device .btn-primary:active,
+.touch-device .card-hover:active,
+.touch-device .hover-lift:active {
+  transform: scale(0.97) !important;
 }
 
-.touch-device .card:hover {
-  transform: none;
-  box-shadow: none;
-  border-color: var(--border);
-  border-width: 1px;
+.touch-device .hover-rotate:hover {
+  transform: none !important;
 }
 
-.touch-device .card:active {
-  transform: scale(0.98);
-  border-color: var(--primary);
-  transition: transform 0.1s, border-color 0.2s;
+/* Вспомогательные классы для отступов с учетом safe area */
+.pt-safe {
+  padding-top: var(--combined-safe-area-inset-top);
 }
 
-/* Визуальный отклик на кнопках при нажатии */
-button:active, 
-.action-button:active, 
-.btn:active, 
-.btn-neon:active {
-  transform: scale(0.98);
-  transition: transform 0.1s ease;
+.pr-safe {
+  padding-right: var(--combined-safe-area-inset-right);
 }
 
-/* Улучшенные стили для инпутов */
-input[type="text"],
-input[type="number"],
-input[type="email"],
-input[type="password"],
-textarea {
-  transition: all 0.3s ease;
-  border: 2px solid var(--border);
-  background-color: transparent;
-  position: relative;
-  z-index: 1;
-  border-radius: calc(var(--radius) * 0.7);
-  color: var(--foreground);
+.pb-safe {
+  padding-bottom: var(--combined-safe-area-inset-bottom);
 }
 
-input[type="text"]:focus,
-input[type="number"]:focus,
-input[type="email"]:focus,
-input[type="password"]:focus,
-textarea:focus {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 2px var(--glow-color);
-  outline: none;
+.pl-safe {
+  padding-left: var(--combined-safe-area-inset-left);
 }
 
-.input-fancy {
-  position: relative;
-  border: 2px solid var(--border);
-  border-radius: var(--radius);
-  background-color: transparent;
-  overflow: hidden;
-  transition: all 0.3s ease;
+.p-safe {
+  padding: var(--combined-safe-area-inset-top) var(--combined-safe-area-inset-right)
+           var(--combined-safe-area-inset-bottom) var(--combined-safe-area-inset-left);
 }
 
-.input-fancy:focus-within {
-  border-color: var(--primary);
-  box-shadow: 0 0 15px var(--glow-color);
-}
-
-.input-fancy::before {
-  content: "";
-  position: absolute;
+/* Классы для отображения информации о safe area */
+.has-tg-safe-area::before {
+  content: attr(data-tg-safe-area);
+  position: fixed;
   top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, var(--glow-color), transparent);
-  transition: 0.5s;
-  z-index: 0;
-}
-
-.input-fancy:focus-within::before {
-  left: 100%;
-}
-
-.input-fancy input,
-.input-fancy select {
-  border: none;
-  background: transparent;
-  width: 100%;
-  position: relative;
-  z-index: 1;
-  border-radius: var(--radius);
-  color: var(--foreground);
-}
-
-.input-fancy input:focus,
-.input-fancy select:focus {
-  box-shadow: none;
-  outline: none;
-}
-
-/* Кнопка с неоновым эффектом */
-.btn-neon {
-  position: relative;
-  background: linear-gradient(to right, var(--primary), #ff7b7b);
+  left: 0;
+  z-index: 9999;
+  font-size: 10px;
+  background: rgba(0, 0, 0, 0.5);
   color: white;
-  border-radius: var(--radius);
-  overflow: hidden;
-  z-index: 1;
-  transition: all 0.4s ease;
-}
-
-.btn-neon::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(to right, var(--primary), #ff7b7b);
-  z-index: -1;
-  transition: opacity 0.4s linear;
+  padding: 2px 4px;
   opacity: 0;
+  pointer-events: none;
 }
 
-.btn-neon:hover::before {
-  opacity: 0.5;
-}
-
-.btn-neon:hover {
-  box-shadow: 0 0 20px var(--glow-color);
-  transform: translateY(-5px);
-}
-
-/* Специальные эффекты */
-.text-shadow {
-  text-shadow: 0 2px 5px var(--shadow-color);
-}
-
-.dark .text-shadow {
-  text-shadow: 0 2px 10px rgba(255, 82, 82, 0.3);
-}
-
-.fire-text {
-  text-shadow: 0 0 10px var(--primary),
-               0 0 15px var(--primary);
-  animation: glow 2s ease-in-out infinite;
-}
-
-.dark .fire-text {
-  text-shadow: 0 0 10px var(--primary),
-              0 0 20px var(--primary),
-              0 0 30px var(--primary);
-}
-
-.shadow-sharp {
-  box-shadow: 
-    0 1px 1px var(--shadow-color), 
-    0 2px 2px var(--shadow-color), 
-    0 4px 4px var(--shadow-color), 
-    0 8px 8px var(--shadow-color);
-  border-radius: var(--radius);
-}
-
-.shadow-glow {
-  box-shadow: 0 0 15px var(--glow-color);
-}
-
-/* Улучшенные карточки */
-.card-premium {
-  position: relative;
-  z-index: 1;
-  background-image: var(--card-premium-gradient);
-  border: 1px solid var(--border);
-  overflow: hidden;
-  box-shadow: 0 10px 30px var(--shadow-color);
-  border-radius: var(--radius);
-}
-
-.card-premium::before {
-  content: '';
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: conic-gradient(
-    transparent, 
-    transparent, 
-    transparent, 
-    var(--primary)
-  );
-  animation: rotate 4s linear infinite;
-  z-index: -2;
-  opacity: 0.3;
-}
-
-.dark .card-premium::before {
+.debug-mode .has-tg-safe-area::before {
   opacity: 1;
-}
-
-.card-premium::after {
-  content: '';
-  position: absolute;
-  inset: 3px;
-  background-image: var(--card-premium-gradient);
-  border-radius: calc(var(--radius) - 3px);
-  z-index: -1;
-}
-
-@keyframes rotate {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
-/* Пульсирующие кнопки действий */
-.action-button {
-  position: relative;
-  border-radius: var(--radius);
-}
-
-.action-button::after {
-  content: '';
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  top: 0;
-  left: 0;
-  border-radius: inherit;
-  animation: pulseRing 1.5s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
-  opacity: 0;
-}
-
-.action-button-primary::after {
-  box-shadow: 0 0 0 0 var(--primary);
-}
-
-.action-button:hover::after {
-  animation: pulseRing 1.5s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
-  opacity: 1;
-}
-
-@keyframes pulseRing {
-  0% {
-    transform: scale(0.95);
-    box-shadow: 0 0 0 0 var(--glow-color);
-  }
-  
-  70% {
-    transform: scale(1);
-    box-shadow: 0 0 0 10px transparent;
-  }
-  
-  100% {
-    transform: scale(0.95);
-    box-shadow: 0 0 0 0 transparent;
-  }
-}
-
-/* Класс для обеспечения скругления всем элементам */
-.rounded-all {
-  border-radius: var(--radius);
-}
-
-/* Класс для дочерних элементов, наследующих скругление */
-.rounded-all > * {
-  border-radius: inherit;
 }
