@@ -151,7 +151,7 @@ export const TelegramStorageProvider: React.FC<{ children: ReactNode }> = ({ chi
   const syncData = async (): Promise<boolean> => {
     if (!isAvailable) {
       setError('CloudStorage недоступен');
-      showNotification('CloudStorage недоступен', 'error');
+      // showNotification('CloudStorage недоступен', 'error');
       return false;
     }
 
@@ -223,7 +223,7 @@ export const TelegramStorageProvider: React.FC<{ children: ReactNode }> = ({ chi
         });
         
         setLoadingStep('Данные успешно синхронизированы');
-        showNotification('Данные успешно синхронизированы с облаком', 'success');
+        // showNotification('Данные успешно синхронизированы с облаком', 'success');
         
         setTimeout(() => {
           setIsLoading(false);
@@ -234,7 +234,7 @@ export const TelegramStorageProvider: React.FC<{ children: ReactNode }> = ({ chi
       } else {
         setError('Не все данные удалось синхронизировать');
         setLoadingStep('Ошибка синхронизации');
-        showNotification('Не все данные удалось синхронизировать', 'error');
+        // showNotification('Не все данные удалось синхронизировать', 'error');
         
         setTimeout(() => {
           setIsLoading(false);
@@ -247,7 +247,7 @@ export const TelegramStorageProvider: React.FC<{ children: ReactNode }> = ({ chi
       console.error('Ошибка при синхронизации данных:', e);
       setError(`Ошибка синхронизации: ${e instanceof Error ? e.message : 'Неизвестная ошибка'}`);
       setLoadingStep('Ошибка синхронизации');
-      showNotification('Произошла ошибка при синхронизации', 'error');
+      // showNotification('Произошла ошибка при синхронизации', 'error');
       
       setTimeout(() => {
         setIsLoading(false);
@@ -262,7 +262,7 @@ export const TelegramStorageProvider: React.FC<{ children: ReactNode }> = ({ chi
   const loadData = async (): Promise<boolean> => {
     if (!isAvailable) {
       setError('CloudStorage недоступен');
-      showNotification('CloudStorage недоступен', 'error');
+      // showNotification('CloudStorage недоступен', 'error');
       return false;
     }
 
@@ -283,7 +283,7 @@ export const TelegramStorageProvider: React.FC<{ children: ReactNode }> = ({ chi
       if (Object.keys(cloudData).length === 0) {
         setError('В облаке нет данных');
         setLoadingStep('В облаке нет данных');
-        showNotification('В облаке нет сохраненных данных', 'info');
+        // showNotification('В облаке нет сохраненных данных', 'info');
         
         setTimeout(() => {
           setIsLoading(false);
@@ -427,12 +427,12 @@ export const TelegramStorageProvider: React.FC<{ children: ReactNode }> = ({ chi
         
         if (allNotesCount === 0) {
           console.warn('Не удалось загрузить данные в хранилище Zustand! Перезагрузка страницы может помочь.');
-          showNotification('Рекомендуется перезагрузить страницу для загрузки данных', 'warning');
+          // showNotification('Рекомендуется перезагрузить страницу для загрузки данных', 'warning');
         }
       }, 2000);
       
       setLoadingStep('Данные успешно загружены');
-      showNotification('Данные успешно загружены из облака', 'success');
+      // showNotification('Данные успешно загружены из облака', 'success');
       
       setTimeout(() => {
         setIsLoading(false);
@@ -444,7 +444,7 @@ export const TelegramStorageProvider: React.FC<{ children: ReactNode }> = ({ chi
       console.error('Ошибка при загрузке данных из облака:', e);
       setError(`Ошибка загрузки: ${e instanceof Error ? e.message : 'Неизвестная ошибка'}`);
       setLoadingStep('Ошибка загрузки');
-      showNotification('Произошла ошибка при загрузке данных', 'error');
+      // showNotification('Произошла ошибка при загрузке данных', 'error');
       
       setTimeout(() => {
         setIsLoading(false);

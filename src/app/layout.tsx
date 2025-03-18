@@ -193,7 +193,7 @@ export default function RootLayout({
               <main className="flex-1 w-full px-3 sm:px-4 py-4 sm:py-6 mx-auto max-w-full sm:max-w-7xl">
                 {children}
               </main>
-              <Footer />
+              {/* <Footer /> */}
             </div>
           </TelegramStorageProvider>
         </ThemeProvider>

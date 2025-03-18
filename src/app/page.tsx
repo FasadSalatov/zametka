@@ -10,7 +10,7 @@ export default function Home() {
           <span className="text-gradient">Zametka</span>
         </h1>
         <p className="text-lg sm:text-xl text-foreground">
-          Мой личный сервис для заметок и учета финансов, по поводу багов писать в телеграм @Fasad_Salatov
+          Мой личный сервис для заметок и учета финансов, по поводу багов писать в телеграм @ithustlercoach
         </p>
         <div className="mt-4 sm:mt-6 flex justify-center gap-3 sm:gap-4" style={{
           paddingLeft: `var(--tg-content-safe-area-inset-left)`,

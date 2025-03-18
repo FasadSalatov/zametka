@@ -147,7 +147,7 @@ export default function TelegramCloudStorageCard() {
         
         const success = await syncData();
         if (success) {
-          showNotification('Данные успешно сохранены в облако', 'success');
+         // showNotification('Данные успешно сохранены в облако', 'success');
         }
       }
     } catch (error) {
@@ -161,7 +161,7 @@ export default function TelegramCloudStorageCard() {
       if (!isLoading) {
         const success = await loadData();
         if (success) {
-          showNotification('Данные успешно загружены из облака', 'success');
+        //  showNotification('Данные успешно загружены из облака', 'success');
         }
       }
     } catch (error) {

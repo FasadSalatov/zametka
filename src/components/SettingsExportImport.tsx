@@ -162,10 +162,10 @@ export default function SettingsExportImport() {
         window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
       }
       
-      showNotification('Данные успешно экспортированы', 'success');
+      // showNotification('Данные успешно экспортированы', 'success');
     } catch (error) {
       console.error('Ошибка при экспорте данных:', error);
-      showNotification('Ошибка при экспорте данных', 'error');
+      // showNotification('Ошибка при экспорте данных', 'error');
     } finally {
       setIsExporting(false);
     }
@@ -184,7 +184,7 @@ export default function SettingsExportImport() {
       input.onchange = (e) => {
         const file = (e.target as HTMLInputElement).files?.[0];
         if (!file) {
-          showNotification('Файл не выбран', 'warning');
+          // showNotification('Файл не выбран', 'warning');
           setIsImporting(false);
           return;
         }
@@ -205,7 +205,7 @@ export default function SettingsExportImport() {
             
             // Базовая валидация импортированных данных
             if (!validateImportedData(importedData)) {
-              showNotification('Неверный формат файла данных', 'error');
+              // showNotification('Неверный формат файла данных', 'error');
               setIsImporting(false);
               return;
             }
@@ -236,17 +236,17 @@ export default function SettingsExportImport() {
               window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
             }
             
-            showNotification('Данные успешно импортированы', 'success');
+            // showNotification('Данные успешно импортированы', 'success');
             setIsImporting(false);
           } catch (error) {
             console.error('Ошибка при разборе импортированного файла:', error);
-            showNotification('Ошибка при разборе файла данных', 'error');
+            // showNotification('Ошибка при разборе файла данных', 'error');
             setIsImporting(false);
           }
         };
         
         reader.onerror = () => {
-          showNotification('Ошибка при чтении файла', 'error');
+          // showNotification('Ошибка при чтении файла', 'error');
           setIsImporting(false);
         };
         
@@ -271,7 +271,7 @@ export default function SettingsExportImport() {
       
     } catch (error) {
       console.error('Ошибка при импорте данных:', error);
-      showNotification('Ошибка при импорте данных', 'error');
+      // showNotification('Ошибка при импорте данных', 'error');
       setIsImporting(false);
     }
   };

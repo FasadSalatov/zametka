@@ -99,7 +99,7 @@ export default function SettingsCloudStorage() {
       // Обновляем статистику
       await refreshStats();
       
-      showNotification('Данные успешно сохранены в облако', 'success');
+      // showNotification('Данные успешно сохранены в облако', 'success');
       
       // Haptic feedback если доступен
       if (window.Telegram?.WebApp?.HapticFeedback) {
@@ -150,7 +150,7 @@ export default function SettingsCloudStorage() {
         localStorage.setItem('settings', JSON.stringify(cloudData.settings));
       }
       
-      showNotification('Данные успешно загружены из облака', 'success');
+      // showNotification('Данные успешно загружены из облака', 'success');
       
       // Haptic feedback если доступен
       if (window.Telegram?.WebApp?.HapticFeedback) {
