@@ -43,6 +43,10 @@ export default function NewTransactionPage() {
         <Link
           href="/finances"
           className="bg-secondary text-secondary-foreground rounded-md px-4 py-2 text-sm font-medium shadow-sm transition-colors"
+          style={{
+            paddingTop: `calc(0.5rem + var(--tg-safe-area-inset-top))`,
+            paddingRight: `calc(1rem + var(--tg-safe-area-inset-right))`, 
+          }}
         >
           Отмена
         </Link>
