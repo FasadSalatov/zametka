@@ -405,6 +405,74 @@
   transform: translateY(-7px);
 }
 
+/* Отключаем hover-эффекты на мобильных устройствах */
+@media (hover: none) {
+  .hover-lift:hover {
+    transform: none;
+  }
+  
+  .btn-primary:hover {
+    transform: none;
+    box-shadow: none;
+  }
+  
+  .btn-primary:active {
+    transform: scale(0.95);
+    background-color: var(--accent);
+  }
+  
+  .card:hover {
+    transform: none;
+    box-shadow: 0 5px 15px var(--shadow-color);
+  }
+  
+  .card:active {
+    transform: scale(0.98);
+  }
+  
+  .btn-neon:hover {
+    transform: none;
+    box-shadow: none;
+  }
+  
+  .btn-neon:active {
+    transform: scale(0.95);
+  }
+}
+
+/* Стили для сенсорных устройств */
+.touch-device .hover-lift:hover {
+  transform: none;
+}
+
+.touch-device .hover-lift:active {
+  transform: scale(0.98);
+}
+
+.touch-device .btn-primary:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.touch-device .btn-primary:active {
+  transform: scale(0.95);
+  background-color: var(--accent);
+  transition: transform 0.1s, background-color 0.2s;
+}
+
+.touch-device .card:hover {
+  transform: none;
+  box-shadow: none;
+  border-color: var(--border);
+  border-width: 1px;
+}
+
+.touch-device .card:active {
+  transform: scale(0.98);
+  border-color: var(--primary);
+  transition: transform 0.1s, border-color 0.2s;
+}
+
 /* Улучшенные стили для инпутов */
 input[type="text"],
 input[type="number"],

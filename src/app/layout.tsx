@@ -91,6 +91,11 @@ export default function RootLayout({
               const computedStyle = getComputedStyle(document.documentElement);
               console.log('CSS env safe-area-inset-top:', computedStyle.getPropertyValue('--safe-area-inset-top'));
               console.log('CSS env safe-area-inset-bottom:', computedStyle.getPropertyValue('--safe-area-inset-bottom'));
+              
+              // Добавляем класс для touch-устройств
+              if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
+                document.documentElement.classList.add('touch-device');
+              }
             }
             
             if (document.readyState === 'complete') {
