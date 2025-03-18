@@ -300,7 +300,9 @@ export const TelegramStorageProvider: React.FC<{ children: ReactNode }> = ({ chi
       if (cloudData.notes && cloudData.notes.length > 0) {
         console.log(`Применяем ${cloudData.notes.length} заметок из облака`);
         setNotes(cloudData.notes);
+        // Сохраняем в обоих форматах ключей
         localStorage.setItem('notes', JSON.stringify(cloudData.notes));
+        localStorage.setItem('zametka_notes', JSON.stringify(cloudData.notes));
         setStatus(prev => ({ 
           ...prev, 
           notes: { 
@@ -310,13 +312,29 @@ export const TelegramStorageProvider: React.FC<{ children: ReactNode }> = ({ chi
             error: null 
           } 
         }));
+        
+        // Проверяем, что данные действительно загрузились
+        const notesLength = cloudData.notes.length;
+        const notesCopy = [...cloudData.notes]; // Создаем копию сейчас, пока у нас есть гарантия не-undefined
+        setTimeout(() => {
+          const currentNotes = useNotesStore.getState().notes;
+          console.log(`Проверка загрузки заметок: ${currentNotes.length} из ${notesLength}`);
+          
+          if (currentNotes.length !== notesLength) {
+            console.warn('Заметки не были полностью загружены в хранилище Zustand!');
+            // Пробуем загрузить еще раз
+            setNotes(notesCopy);
+          }
+        }, 1000);
       }
       
       // Обновляем финансы
       if (cloudData.finances && cloudData.finances.length > 0) {
         console.log(`Применяем ${cloudData.finances.length} финансовых записей из облака`);
         setTransactions(cloudData.finances);
+        // Сохраняем в обоих форматах ключей
         localStorage.setItem('finances', JSON.stringify(cloudData.finances));
+        localStorage.setItem('zametka_finances', JSON.stringify(cloudData.finances));
         setStatus(prev => ({ 
           ...prev, 
           finances: { 
@@ -326,13 +344,29 @@ export const TelegramStorageProvider: React.FC<{ children: ReactNode }> = ({ chi
             error: null 
           } 
         }));
+        
+        // Проверяем, что данные действительно загрузились
+        const financesLength = cloudData.finances.length;
+        const financesCopy = [...cloudData.finances]; // Создаем копию сейчас, пока у нас есть гарантия не-undefined
+        setTimeout(() => {
+          const currentTransactions = useFinancesStore.getState().transactions;
+          console.log(`Проверка загрузки финансов: ${currentTransactions.length} из ${financesLength}`);
+          
+          if (currentTransactions.length !== financesLength) {
+            console.warn('Финансы не были полностью загружены в хранилище Zustand!');
+            // Пробуем загрузить еще раз
+            setTransactions(financesCopy);
+          }
+        }, 1000);
       }
       
       // Обновляем долги
       if (cloudData.debts && cloudData.debts.length > 0) {
         console.log(`Применяем ${cloudData.debts.length} долгов из облака`);
         setDebts(cloudData.debts);
+        // Сохраняем в обоих форматах ключей
         localStorage.setItem('debts', JSON.stringify(cloudData.debts));
+        localStorage.setItem('zametka_debts', JSON.stringify(cloudData.debts));
         setStatus(prev => ({ 
           ...prev, 
           debts: { 
@@ -342,13 +376,29 @@ export const TelegramStorageProvider: React.FC<{ children: ReactNode }> = ({ chi
             error: null 
           } 
         }));
+        
+        // Проверяем, что данные действительно загрузились
+        const debtsLength = cloudData.debts.length;
+        const debtsCopy = [...cloudData.debts]; // Создаем копию сейчас, пока у нас есть гарантия не-undefined
+        setTimeout(() => {
+          const currentDebts = useDebtsStore.getState().debts;
+          console.log(`Проверка загрузки долгов: ${currentDebts.length} из ${debtsLength}`);
+          
+          if (currentDebts.length !== debtsLength) {
+            console.warn('Долги не были полностью загружены в хранилище Zustand!');
+            // Пробуем загрузить еще раз
+            setDebts(debtsCopy);
+          }
+        }, 1000);
       }
       
       // Обновляем настройки
       if (cloudData.settings) {
         console.log('Применяем настройки из облака');
         setSettings(cloudData.settings);
+        // Сохраняем в обоих форматах ключей
         localStorage.setItem('settings', JSON.stringify(cloudData.settings));
+        localStorage.setItem('zametka_settings', JSON.stringify(cloudData.settings));
         setStatus(prev => ({ 
           ...prev, 
           settings: { 
@@ -366,6 +416,20 @@ export const TelegramStorageProvider: React.FC<{ children: ReactNode }> = ({ chi
       if (typeof sessionStorage !== 'undefined') {
         sessionStorage.setItem('zametka_session_loaded', 'true');
       }
+      
+      // Проверка на то, что хотя бы какие-то данные были загружены
+      setTimeout(() => {
+        const allNotesCount = useNotesStore.getState().notes.length + 
+                            useFinancesStore.getState().transactions.length + 
+                            useDebtsStore.getState().debts.length;
+        
+        console.log(`Итоговая проверка загруженных данных: ${allNotesCount} элементов`);
+        
+        if (allNotesCount === 0) {
+          console.warn('Не удалось загрузить данные в хранилище Zustand! Перезагрузка страницы может помочь.');
+          showNotification('Рекомендуется перезагрузить страницу для загрузки данных', 'warning');
+        }
+      }, 2000);
       
       setLoadingStep('Данные успешно загружены');
       showNotification('Данные успешно загружены из облака', 'success');
