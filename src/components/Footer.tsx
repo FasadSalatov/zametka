@@ -8,9 +8,9 @@ export default function Footer() {
   
   return (
     <footer className="w-full border-t border-border/40 pt-3 pb-3 md:pt-4 md:pb-4 mt-auto" style={{ 
-      paddingBottom: `calc(0.75rem + var(--safe-area-inset-bottom))`,
-      paddingLeft: `calc(0.75rem + var(--safe-area-inset-left))`,
-      paddingRight: `calc(0.75rem + var(--safe-area-inset-right))` 
+      paddingBottom: `calc(0.75rem + var(--combined-safe-area-inset-bottom))`,
+      paddingLeft: `calc(0.75rem + var(--combined-safe-area-inset-left))`,
+      paddingRight: `calc(0.75rem + var(--combined-safe-area-inset-right))` 
     }}>
       <div className="max-w-7xl mx-auto px-3 sm:px-4">
         <div className="flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-0">

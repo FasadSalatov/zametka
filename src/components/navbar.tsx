@@ -9,6 +9,7 @@ const links = [
   { href: "/", label: "Главная" },
   { href: "/notes", label: "Заметки" },
   { href: "/finances", label: "Финансы" },
+  { href: "/debts", label: "Долги" },
   { href: "/settings", label: "Настройки" },
 ];
 
@@ -17,9 +18,9 @@ export function Navbar() {
 
   return (
     <nav className="sticky top-0 z-10 bg-background/80 backdrop-blur-xl shadow-sm" style={{ 
-      paddingTop: `var(--safe-area-inset-top)`,
-      paddingLeft: `var(--safe-area-inset-left)`,
-      paddingRight: `var(--safe-area-inset-right)` 
+      paddingTop: `var(--combined-safe-area-inset-top)`,
+      paddingLeft: `var(--combined-safe-area-inset-left)`,
+      paddingRight: `var(--combined-safe-area-inset-right)` 
     }}>
       <div className="max-w-7xl mx-auto px-3 sm:px-4">
         <div className="flex justify-between h-14 sm:h-16 items-center">
@@ -65,7 +66,7 @@ export function Navbar() {
       </div>
       {/* Мобильное меню */}
       <div className="md:hidden">
-        <div className="grid grid-cols-4 gap-0 p-0.5">
+        <div className="grid grid-cols-5 gap-0 p-0.5">
           {links.map((link) => (
             <Link
               key={link.href}

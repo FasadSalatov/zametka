@@ -13,12 +13,13 @@ export default function Home() {
           Мой личный сервис для заметок и учета финансов, по поводу багов писать в телеграм @Fasad_Salatov
         </p>
         <div className="mt-4 sm:mt-6 flex justify-center gap-3 sm:gap-4" style={{
-          paddingLeft: `var(--safe-area-inset-left)`,
-          paddingRight: `var(--safe-area-inset-right)`,
-          paddingBottom: `var(--safe-area-inset-bottom)`
+          paddingLeft: `var(--tg-content-safe-area-inset-left)`,
+          paddingRight: `var(--tg-content-safe-area-inset-right)`,
+          paddingBottom: `var(--tg-content-safe-area-inset-bottom)`
         }}>
           <Link href="/notes" className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-md px-3 sm:px-4 py-2 text-sm font-medium shadow-sm transition-colors hover-lift">Заметки</Link>
           <Link href="/finances" className="bg-secondary hover:bg-secondary/90 text-secondary-foreground rounded-md px-3 sm:px-4 py-2 text-sm font-medium shadow-sm transition-colors hover-lift">Финансы</Link>
+          <Link href="/debts" className="bg-accent hover:bg-accent/90 text-accent-foreground rounded-md px-3 sm:px-4 py-2 text-sm font-medium shadow-sm transition-colors hover-lift">Долги</Link>
         </div>
         
         <div className="hidden sm:flex justify-center mt-4">
@@ -31,7 +32,7 @@ export default function Home() {
       </div>
       
       {/* Блоки основных функций */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6" style={{
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6" style={{
         paddingLeft: `var(--safe-area-inset-left)`,
         paddingRight: `var(--safe-area-inset-right)`,
         paddingBottom: `var(--safe-area-inset-bottom)`
@@ -103,6 +104,54 @@ export default function Home() {
             Контроль доходов и расходов, анализ финансов
           </p>
           <Link href="/finances" className="inline-flex items-center text-primary font-medium group">
+            Открыть 
+            <svg 
+              xmlns="http://www.w3.org/2000/svg" 
+              width="16" 
+              height="16" 
+              viewBox="0 0 24 24" 
+              fill="none" 
+              stroke="currentColor" 
+              strokeWidth="2" 
+              strokeLinecap="round" 
+              strokeLinejoin="round" 
+              className="ml-1 group-hover:translate-x-1 transition-transform"
+              aria-hidden="true"
+            >
+              <path d="M5 12h14"></path>
+              <path d="m12 5 7 7-7 7"></path>
+            </svg>
+          </Link>
+        </div>
+
+        <div className="card p-5 sm:p-6 space-y-3 sm:space-y-4 glass hover-lift">
+          <div className="icon-gradient w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center">
+            <svg 
+              xmlns="http://www.w3.org/2000/svg" 
+              width="20" 
+              height="20" 
+              viewBox="0 0 24 24" 
+              fill="none" 
+              stroke="currentColor" 
+              strokeWidth="2" 
+              strokeLinecap="round" 
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"></path>
+              <rect width="6" height="4" x="9" y="3" rx="2"></rect>
+              <path d="M8 21v-4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v4"></path>
+              <path d="M12 11h4"></path>
+              <path d="M12 15h4"></path>
+              <path d="M8 11h.01"></path>
+              <path d="M8 15h.01"></path>
+            </svg>
+          </div>
+          <h2 className="text-lg sm:text-xl font-semibold">Долги</h2>
+          <p className="text-sm sm:text-base text-foreground">
+            Контроль и отслеживание одолженных денег
+          </p>
+          <Link href="/debts" className="inline-flex items-center text-primary font-medium group">
             Открыть 
             <svg 
               xmlns="http://www.w3.org/2000/svg" 

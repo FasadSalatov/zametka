@@ -17,10 +17,21 @@ export interface Note {
   createdAt: number;
 }
 
+export interface Debt {
+  id: string;
+  personName: string;
+  amount: number;
+  description: string;
+  dueDate: string;
+  isReturned: boolean;
+  createdAt: number;
+}
+
 // Константы ключей для localStorage
 const TRANSACTIONS_KEY = 'zametka_transactions';
 const NOTES_KEY = 'zametka_notes';
 const SETTINGS_KEY = 'zametka_settings';
+const DEBTS_KEY = 'zametka_debts';
 
 // Интерфейс настроек
 export interface Settings {
@@ -39,6 +50,7 @@ export interface ExportData {
   transactions: Transaction[];
   notes: Note[];
   settings: Settings;
+  debts: Debt[];
   version: string;
   exportDate: number;
 }
@@ -121,6 +133,72 @@ export function deleteNote(id: string): boolean {
   return true;
 }
 
+// Функции для управления долгами
+export function getDebts(): Debt[] {
+  if (typeof window === 'undefined') return [];
+  
+  try {
+    const debts = localStorage.getItem(DEBTS_KEY);
+    return debts ? JSON.parse(debts) : [];
+  } catch (error) {
+    console.error('Ошибка при получении долгов:', error);
+    return [];
+  }
+}
+
+export function addDebt(debt: Omit<Debt, 'id' | 'createdAt' | 'isReturned'>): Debt {
+  const debts = getDebts();
+  
+  const newDebt: Debt = {
+    ...debt,
+    id: Date.now().toString(),
+    isReturned: false,
+    createdAt: Date.now()
+  };
+  
+  localStorage.setItem(DEBTS_KEY, JSON.stringify([...debts, newDebt]));
+  
+  return newDebt;
+}
+
+export function updateDebt(id: string, updates: Partial<Debt>): Debt | null {
+  const debts = getDebts();
+  const debtIndex = debts.findIndex(debt => debt.id === id);
+  
+  if (debtIndex === -1) {
+    return null; // Долг не найден
+  }
+  
+  const updatedDebt = {
+    ...debts[debtIndex],
+    ...updates
+  };
+  
+  debts[debtIndex] = updatedDebt;
+  localStorage.setItem(DEBTS_KEY, JSON.stringify(debts));
+  
+  return updatedDebt;
+}
+
+export function deleteDebt(id: string): boolean {
+  const debts = getDebts();
+  const updatedDebts = debts.filter(debt => debt.id !== id);
+  
+  if (updatedDebts.length === debts.length) {
+    return false; // Ничего не было удалено
+  }
+  
+  localStorage.setItem(DEBTS_KEY, JSON.stringify(updatedDebts));
+  return true;
+}
+
+// Функция для расчета общей суммы непогашенных долгов
+export function calculateTotalDebts(debts: Debt[]): number {
+  return debts
+    .filter(debt => !debt.isReturned)
+    .reduce((sum, debt) => sum + debt.amount, 0);
+}
+
 // Функции для управления настройками
 export function getSettings(): Settings {
   if (typeof window === 'undefined') return DEFAULT_SETTINGS;
@@ -148,11 +226,13 @@ export function exportAllData(): ExportData {
   const transactions = getTransactions();
   const notes = getNotes();
   const settings = getSettings();
+  const debts = getDebts();
   
   const exportData: ExportData = {
     transactions,
     notes,
     settings,
+    debts,
     version: '1.0.0',
     exportDate: Date.now()
   };

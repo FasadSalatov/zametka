@@ -32,36 +32,71 @@ export default function RootLayout({
             function updateSafeArea() {
               if (window.Telegram && window.Telegram.WebApp) {
                 const tgApp = window.Telegram.WebApp;
+                const html = document.documentElement;
                 
-                // Устанавливаем переменные safe area из Telegram WebApp
-                if (tgApp.safeAreaInset) {
-                  document.documentElement.style.setProperty('--tg-safe-area-inset-top', tgApp.safeAreaInset.top + 'px');
-                  document.documentElement.style.setProperty('--tg-safe-area-inset-right', tgApp.safeAreaInset.right + 'px');
-                  document.documentElement.style.setProperty('--tg-safe-area-inset-bottom', tgApp.safeAreaInset.bottom + 'px');
-                  document.documentElement.style.setProperty('--tg-safe-area-inset-left', tgApp.safeAreaInset.left + 'px');
-                }
-                
-                // Устанавливаем переменные content safe area из Telegram WebApp
-                if (tgApp.contentSafeAreaInset) {
-                  document.documentElement.style.setProperty('--tg-content-safe-area-inset-top', tgApp.contentSafeAreaInset.top + 'px');
-                  document.documentElement.style.setProperty('--tg-content-safe-area-inset-right', tgApp.contentSafeAreaInset.right + 'px');
-                  document.documentElement.style.setProperty('--tg-content-safe-area-inset-bottom', tgApp.contentSafeAreaInset.bottom + 'px');
-                  document.documentElement.style.setProperty('--tg-content-safe-area-inset-left', tgApp.contentSafeAreaInset.left + 'px');
+                if (tgApp.version && typeof tgApp.isVersionAtLeast === 'function' && tgApp.isVersionAtLeast('8.0')) {
+                  // Обрабатываем системные safe area insets (notch, navigation bar и т.д.)
+                  if (tgApp.safeAreaInset) {
+                    console.log('Telegram safeAreaInset:', tgApp.safeAreaInset);
+                    html.style.setProperty('--tg-safe-area-inset-top', tgApp.safeAreaInset.top + 'px');
+                    html.style.setProperty('--tg-safe-area-inset-right', tgApp.safeAreaInset.right + 'px');
+                    html.style.setProperty('--tg-safe-area-inset-bottom', tgApp.safeAreaInset.bottom + 'px');
+                    html.style.setProperty('--tg-safe-area-inset-left', tgApp.safeAreaInset.left + 'px');
+                    
+                    // Добавляем класс для отображения информации
+                    html.classList.add('has-tg-safe-area');
+                  }
+                  
+                  // Обрабатываем content safe area insets (учитывая UI элементы Telegram)
+                  if (tgApp.contentSafeAreaInset) {
+                    console.log('Telegram contentSafeAreaInset:', tgApp.contentSafeAreaInset);
+                    html.style.setProperty('--tg-content-safe-area-inset-top', tgApp.contentSafeAreaInset.top + 'px');
+                    html.style.setProperty('--tg-content-safe-area-inset-right', tgApp.contentSafeAreaInset.right + 'px');
+                    html.style.setProperty('--tg-content-safe-area-inset-bottom', tgApp.contentSafeAreaInset.bottom + 'px');
+                    html.style.setProperty('--tg-content-safe-area-inset-left', tgApp.contentSafeAreaInset.left + 'px');
+                    
+                    // Добавляем класс для отображения информации
+                    html.classList.add('has-tg-content-safe-area');
+                  }
+                } else {
+                  // Версия Telegram не поддерживает safe area API, используем CSS env()
+                  console.log('Telegram version does not support safe area API, using CSS env() variables');
                 }
                 
                 // Устанавливаем обработчики событий для обновления в случае изменения safe area
                 if (tgApp.onEvent) {
                   tgApp.onEvent('safeAreaChanged', updateSafeArea);
                   tgApp.onEvent('contentSafeAreaChanged', updateSafeArea);
+                  tgApp.onEvent('fullscreenChanged', updateSafeArea);
+                  
+                  // Сообщаем в консоль о результатах инициализации
+                  console.log('Safe area event handlers initialized');
                 }
+                
+                // Сообщаем Telegram, что приложение готово
+                if (tgApp.ready) {
+                  tgApp.ready();
+                }
+              } else {
+                console.log('Telegram WebApp API not available');
               }
             }
             
             // Запускаем инициализацию после полной загрузки страницы
-            if (document.readyState === 'complete') {
+            function initSafeArea() {
+              console.log('Initializing safe area');
               updateSafeArea();
+              
+              // Отображаем текущие значения env() переменных
+              const computedStyle = getComputedStyle(document.documentElement);
+              console.log('CSS env safe-area-inset-top:', computedStyle.getPropertyValue('--safe-area-inset-top'));
+              console.log('CSS env safe-area-inset-bottom:', computedStyle.getPropertyValue('--safe-area-inset-bottom'));
+            }
+            
+            if (document.readyState === 'complete') {
+              initSafeArea();
             } else {
-              window.addEventListener('load', updateSafeArea);
+              window.addEventListener('load', initSafeArea);
             }
           `}
         </Script>
