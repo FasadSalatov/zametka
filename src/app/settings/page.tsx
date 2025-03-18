@@ -2,14 +2,10 @@
 
 import React, { useEffect, useState } from 'react';
 import SettingsExportImport from '@/components/SettingsExportImport';
-import { useCloudStorage } from '@/components/providers/cloud-storage-provider';
 import TelegramFullscreenButton from '@/components/TelegramFullscreenButton';
 
 export default function SettingsPage() {
   const [theme, setTheme] = useState<string>('dark');
-  const { loadStatus, lastLoadTime } = useCloudStorage();
-
-  const totalCloudItems = (loadStatus.notes.count || 0) + (loadStatus.finances.count || 0) + (loadStatus.debts.count || 0);
 
   // При монтировании получаем текущую тему
   useEffect(() => {
@@ -41,49 +37,7 @@ export default function SettingsPage() {
       
       <div className="space-y-8">
         <div className="bg-card border border-border rounded-xl p-4">
-          <h2 className="text-xl font-medium mb-4">Облачные данные</h2>
-          
-          {/* Информационная панель о данных в облаке */}
-          <div className="mb-4 bg-muted/40 rounded-lg p-3 text-sm">
-            <div className="flex justify-between items-center mb-2">
-              <span className="font-medium">Всего элементов в облаке:</span>
-              <span className="text-primary font-medium">{totalCloudItems}</span>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-x-4 gap-y-1 mt-3 text-xs text-muted-foreground">
-              <div className="flex justify-between">
-                <span>Заметки:</span>
-                <span className={loadStatus.notes.isLoaded ? "text-green-500" : ""}>
-                  {loadStatus.notes.count}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span>Финансы:</span>
-                <span className={loadStatus.finances.isLoaded ? "text-green-500" : ""}>
-                  {loadStatus.finances.count}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span>Долги:</span>
-                <span className={loadStatus.debts.isLoaded ? "text-green-500" : ""}>
-                  {loadStatus.debts.count}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span>Настройки:</span>
-                <span className={loadStatus.settings.isLoaded ? "text-green-500" : ""}>
-                  {loadStatus.settings.isLoaded ? "Да" : "Нет"}
-                </span>
-              </div>
-            </div>
-            
-            {lastLoadTime && (
-              <div className="text-xs text-muted-foreground mt-3">
-                Последняя синхронизация: {lastLoadTime}
-              </div>
-            )}
-          </div>
-          
+          <h2 className="text-xl font-medium mb-4">Данные</h2>
           <SettingsExportImport />
         </div>
         
@@ -145,7 +99,7 @@ export default function SettingsPage() {
           <div className="text-muted-foreground text-sm space-y-2">
             <p>Версия: 1.0.0</p>
             <p>Приложение для удобного ведения заметок, учета финансов и долгов.</p>
-            <p>Все данные хранятся в облаке Telegram и доступны на всех ваших устройствах.</p>
+            <p>Все данные хранятся локально на вашем устройстве.</p>
           </div>
         </div>
       </div>
