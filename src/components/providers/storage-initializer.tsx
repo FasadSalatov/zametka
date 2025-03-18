@@ -71,6 +71,32 @@ export function StorageInitializer() {
           }
         }
         
+        // Дополнительная проверка для других возможных ключей финансов
+        const alternativeFinancesKeys = ["finances", "zametka-finances", "transactions", "zametka_transactions"];
+        for (const key of alternativeFinancesKeys) {
+          if (allKeys.includes(key) && !allKeys.includes(financesKey)) {
+            try {
+              const financesData = localStorage.getItem(key);
+              console.log(`Данные из альтернативного ключа ${key}:`, financesData);
+              
+              if (financesData) {
+                const parsedFinances = JSON.parse(financesData);
+                console.log(`Разобранные финансы из альтернативного ключа:`, parsedFinances);
+                
+                if (Array.isArray(parsedFinances) && parsedFinances.length > 0) {
+                  console.log(`Загружаем ${parsedFinances.length} финансов из ключа ${key} в Zustand...`);
+                  setTransactions(parsedFinances);
+                  localStorage.setItem("finances", financesData);
+                  localStorage.setItem("zametka_finances", financesData);
+                  break;
+                }
+              }
+            } catch (e) {
+              console.error(`Ошибка при загрузке финансов из альтернативного ключа ${key}:`, e);
+            }
+          }
+        }
+        
         // Проверяем ключи с долгами
         const debtsKey = "zametka_debts";
         if (allKeys.includes(debtsKey)) {
@@ -132,6 +158,31 @@ export function StorageInitializer() {
             }
           } catch (e) {
             console.error("Ошибка при разборе заметок:", e);
+          }
+        }
+      }
+      
+      // Проверка финансов после инициализации
+      if (transactions.length === 0) {
+        // Проверяем все возможные ключи для финансов
+        const possibleKeys = ["zametka_finances", "finances", "zametka-finances", "transactions", "zametka_transactions"];
+        for (const key of possibleKeys) {
+          const financeData = localStorage.getItem(key);
+          if (financeData) {
+            try {
+              const parsedFinances = JSON.parse(financeData);
+              if (Array.isArray(parsedFinances) && parsedFinances.length > 0) {
+                console.log(`ПРИНУДИТЕЛЬНАЯ загрузка финансов из ключа ${key}`);
+                setTransactions(parsedFinances);
+                
+                // Обновляем Zustand storage вручную
+                localStorage.setItem("finances", financeData);
+                localStorage.setItem("zametka_finances", financeData);
+                break;
+              }
+            } catch (e) {
+              console.error(`Ошибка при разборе финансов из ключа ${key}:`, e);
+            }
           }
         }
       }

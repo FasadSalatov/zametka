@@ -83,6 +83,34 @@ export default function SettingsExportImport() {
         }
       }
       
+      // Проверка финансов перед экспортом
+      if (transactions.length === 0) {
+        // Проверяем все возможные ключи для финансов
+        const possibleKeys = ["zametka_finances", "finances", "zametka-finances", "transactions", "zametka_transactions"];
+        for (const key of possibleKeys) {
+          const financeData = localStorage.getItem(key);
+          if (financeData) {
+            try {
+              const parsedFinances = JSON.parse(financeData);
+              if (Array.isArray(parsedFinances) && parsedFinances.length > 0) {
+                console.log(`Экспорт: принудительная загрузка ${parsedFinances.length} финансов из ключа ${key}`);
+                setTransactions(parsedFinances);
+                
+                // Сохраняем данные под стандартными ключами
+                localStorage.setItem("finances", financeData);
+                localStorage.setItem("zametka_finances", financeData);
+                
+                // Небольшая задержка, чтобы хранилище обновилось
+                await new Promise(resolve => setTimeout(resolve, 100));
+                break;
+              }
+            } catch (e) {
+              console.error(`Ошибка при разборе финансов из ключа ${key}:`, e);
+            }
+          }
+        }
+      }
+      
       // Проверяем, что данные действительно есть в хранилище
       console.log('Данные для экспорта ПОСЛЕ проверки:', {
         notes: useNotesStore.getState().notes.length,
