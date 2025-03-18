@@ -12,6 +12,7 @@ interface TelegramWebApp {
 
 declare global {
   interface Window {
+    // @ts-ignore
     Telegram?: {
       WebApp?: TelegramWebApp;
     };
