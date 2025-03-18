@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import SettingsExportImport from '@/components/SettingsExportImport';
 import TelegramFullscreenButton from '@/components/TelegramFullscreenButton';
-import TelegramCloudStorageSettings from '@/components/settings/TelegramCloudStorageSettings';
+import TelegramCloudStorageCard from '@/components/TelegramCloudStorageCard';
 
 export default function SettingsPage() {
   const [theme, setTheme] = useState<string>('dark');
@@ -39,7 +39,7 @@ export default function SettingsPage() {
       <div className="space-y-8">
         <div className="bg-card border border-border rounded-xl p-4">
           <h2 className="text-xl font-medium mb-4">Облачное хранилище</h2>
-          <TelegramCloudStorageSettings />
+          <TelegramCloudStorageCard />
         </div>
         
         <div className="bg-card border border-border rounded-xl p-4">
