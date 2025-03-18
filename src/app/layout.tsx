@@ -185,9 +185,9 @@ export default function RootLayout({
         </Script>
       </head>
       <body className={`${inter.className} antialiased overflow-x-hidden`}>
+        <StorageInitializer />
         <ThemeProvider defaultTheme="dark">
           <TelegramStorageProvider>
-            <StorageInitializer />
             <div className="min-h-screen flex flex-col">
               <Navbar />
               <main className="flex-1 w-full px-3 sm:px-4 py-4 sm:py-6 mx-auto max-w-full sm:max-w-7xl">

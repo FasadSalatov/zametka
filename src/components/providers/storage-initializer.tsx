@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useNotesStore } from "@/stores/notes-store";
 import { useFinancesStore } from "@/stores/finances-store";
 import { useDebtsStore } from "@/stores/debts-store";
@@ -12,208 +12,137 @@ export function StorageInitializer() {
   const { transactions, setTransactions } = useFinancesStore();
   const { debts, setDebts } = useDebtsStore();
   const { settings, setSettings } = useSettingsStore();
+  const [initialized, setInitialized] = useState(false);
 
+  // Принудительная загрузка данных из localStorage немедленно
   useEffect(() => {
-    console.log("Инициализация хранилищ данных...");
-
-    // Проверяем, есть ли уже данные в хранилищах
-    console.log("Текущие данные в хранилищах:", {
-      notes: notes.length,
-      transactions: transactions.length,
-      debts: debts.length,
-      settings: settings ? Object.keys(settings).length : 0,
-    });
-
-    // Если хранилища пусты, пробуем загрузить данные из localStorage
-    if (typeof window !== "undefined") {
+    // Функция для немедленной инициализации данных
+    const initializeData = () => {
       try {
-        // Проверка локального хранилища
-        const localStorageKeys = Object.keys(localStorage);
-        console.log("Ключи в localStorage:", localStorageKeys);
+        console.log("Ручная инициализация хранилищ данных...");
         
-        // Загрузка заметок
-        if (notes.length === 0) {
-          // Пробуем стандартные ключи
-          const savedNotes = localStorage.getItem("notes");
-          // Пробуем ключи из CloudStorage
-          const savedZametkaNotesString = localStorage.getItem(STORAGE_KEYS.NOTES);
-          // Также проверяем прямо ключ zametka_notes
-          const savedZametkaNotesDirectString = localStorage.getItem("zametka_notes");
-          
-          let parsedNotes = null;
-          
-          if (savedNotes) {
-            console.log("Загружаем заметки из localStorage (ключ notes)...");
-            try {
-              parsedNotes = JSON.parse(savedNotes);
-            } catch (e) {
-              console.error("Ошибка при разборе заметок из notes:", e);
-            }
-          } else if (savedZametkaNotesString) {
-            console.log(`Загружаем заметки из localStorage (ключ ${STORAGE_KEYS.NOTES})...`);
-            try {
-              parsedNotes = JSON.parse(savedZametkaNotesString);
-            } catch (e) {
-              console.error(`Ошибка при разборе заметок из ${STORAGE_KEYS.NOTES}:`, e);
-            }
-          } else if (savedZametkaNotesDirectString) {
-            console.log("Загружаем заметки из localStorage (ключ zametka_notes)...");
-            try {
-              parsedNotes = JSON.parse(savedZametkaNotesDirectString);
-            } catch (e) {
-              console.error("Ошибка при разборе заметок из zametka_notes:", e);
-            }
-          }
-          
-          if (parsedNotes && Array.isArray(parsedNotes) && parsedNotes.length > 0) {
-            console.log(`Найдено ${parsedNotes.length} заметок`);
-            setNotes(parsedNotes);
+        if (typeof window === "undefined") return;
+        
+        // Вывод всех ключей в localStorage
+        const allKeys = Object.keys(localStorage);
+        console.log("Все ключи в localStorage:", allKeys);
+        
+        // Проверяем ключи с заметками
+        const notesKey = "zametka_notes";
+        if (allKeys.includes(notesKey)) {
+          try {
+            const notesData = localStorage.getItem(notesKey);
+            console.log(`Данные из ${notesKey}:`, notesData);
             
-            // Сохраняем в обоих ключах для совместимости
-            localStorage.setItem("notes", JSON.stringify(parsedNotes));
-            localStorage.setItem(STORAGE_KEYS.NOTES, JSON.stringify(parsedNotes));
+            if (notesData) {
+              const parsedNotes = JSON.parse(notesData);
+              console.log(`Разобранные заметки:`, parsedNotes);
+              
+              if (Array.isArray(parsedNotes) && parsedNotes.length > 0) {
+                console.log(`Загружаем ${parsedNotes.length} заметок в Zustand...`);
+                setNotes(parsedNotes);
+                localStorage.setItem("notes", notesData);
+              }
+            }
+          } catch (e) {
+            console.error(`Ошибка при загрузке заметок из ${notesKey}:`, e);
           }
         }
-
-        // Загрузка финансов
-        if (transactions.length === 0) {
-          const savedTransactions = localStorage.getItem("finances");
-          const savedZametkaFinances = localStorage.getItem(STORAGE_KEYS.FINANCES);
-          const savedZametkaFinancesDirect = localStorage.getItem("zametka_finances");
-          
-          let parsedTransactions = null;
-          
-          if (savedTransactions) {
-            console.log("Загружаем финансы из localStorage (ключ finances)...");
-            try {
-              parsedTransactions = JSON.parse(savedTransactions);
-            } catch (e) {
-              console.error("Ошибка при разборе финансов из finances:", e);
-            }
-          } else if (savedZametkaFinances) {
-            console.log(`Загружаем финансы из localStorage (ключ ${STORAGE_KEYS.FINANCES})...`);
-            try {
-              parsedTransactions = JSON.parse(savedZametkaFinances);
-            } catch (e) {
-              console.error(`Ошибка при разборе финансов из ${STORAGE_KEYS.FINANCES}:`, e);
-            }
-          } else if (savedZametkaFinancesDirect) {
-            console.log("Загружаем финансы из localStorage (ключ zametka_finances)...");
-            try {
-              parsedTransactions = JSON.parse(savedZametkaFinancesDirect);
-            } catch (e) {
-              console.error("Ошибка при разборе финансов из zametka_finances:", e);
-            }
-          }
-          
-          if (parsedTransactions && Array.isArray(parsedTransactions) && parsedTransactions.length > 0) {
-            console.log(`Найдено ${parsedTransactions.length} финансовых записей`);
-            setTransactions(parsedTransactions);
+        
+        // Проверяем ключи с финансами
+        const financesKey = "zametka_finances";
+        if (allKeys.includes(financesKey)) {
+          try {
+            const financesData = localStorage.getItem(financesKey);
+            console.log(`Данные из ${financesKey}:`, financesData);
             
-            // Сохраняем в обоих ключах для совместимости
-            localStorage.setItem("finances", JSON.stringify(parsedTransactions));
-            localStorage.setItem(STORAGE_KEYS.FINANCES, JSON.stringify(parsedTransactions));
+            if (financesData) {
+              const parsedFinances = JSON.parse(financesData);
+              console.log(`Разобранные финансы:`, parsedFinances);
+              
+              if (Array.isArray(parsedFinances) && parsedFinances.length > 0) {
+                console.log(`Загружаем ${parsedFinances.length} финансов в Zustand...`);
+                setTransactions(parsedFinances);
+                localStorage.setItem("finances", financesData);
+              }
+            }
+          } catch (e) {
+            console.error(`Ошибка при загрузке финансов из ${financesKey}:`, e);
           }
         }
-
-        // Загрузка долгов
-        if (debts.length === 0) {
-          const savedDebts = localStorage.getItem("debts");
-          const savedZametkaDebts = localStorage.getItem(STORAGE_KEYS.DEBTS);
-          const savedZametkaDebtsDirect = localStorage.getItem("zametka_debts");
-          
-          let parsedDebts = null;
-          
-          if (savedDebts) {
-            console.log("Загружаем долги из localStorage (ключ debts)...");
-            try {
-              parsedDebts = JSON.parse(savedDebts);
-            } catch (e) {
-              console.error("Ошибка при разборе долгов из debts:", e);
-            }
-          } else if (savedZametkaDebts) {
-            console.log(`Загружаем долги из localStorage (ключ ${STORAGE_KEYS.DEBTS})...`);
-            try {
-              parsedDebts = JSON.parse(savedZametkaDebts);
-            } catch (e) {
-              console.error(`Ошибка при разборе долгов из ${STORAGE_KEYS.DEBTS}:`, e);
-            }
-          } else if (savedZametkaDebtsDirect) {
-            console.log("Загружаем долги из localStorage (ключ zametka_debts)...");
-            try {
-              parsedDebts = JSON.parse(savedZametkaDebtsDirect);
-            } catch (e) {
-              console.error("Ошибка при разборе долгов из zametka_debts:", e);
-            }
-          }
-          
-          if (parsedDebts && Array.isArray(parsedDebts) && parsedDebts.length > 0) {
-            console.log(`Найдено ${parsedDebts.length} долгов`);
-            setDebts(parsedDebts);
+        
+        // Проверяем ключи с долгами
+        const debtsKey = "zametka_debts";
+        if (allKeys.includes(debtsKey)) {
+          try {
+            const debtsData = localStorage.getItem(debtsKey);
+            console.log(`Данные из ${debtsKey}:`, debtsData);
             
-            // Сохраняем в обоих ключах для совместимости
-            localStorage.setItem("debts", JSON.stringify(parsedDebts));
-            localStorage.setItem(STORAGE_KEYS.DEBTS, JSON.stringify(parsedDebts));
+            if (debtsData) {
+              const parsedDebts = JSON.parse(debtsData);
+              console.log(`Разобранные долги:`, parsedDebts);
+              
+              if (Array.isArray(parsedDebts) && parsedDebts.length > 0) {
+                console.log(`Загружаем ${parsedDebts.length} долгов в Zustand...`);
+                setDebts(parsedDebts);
+                localStorage.setItem("debts", debtsData);
+              }
+            }
+          } catch (e) {
+            console.error(`Ошибка при загрузке долгов из ${debtsKey}:`, e);
           }
         }
-
-        // Загрузка настроек
-        if (!settings || Object.keys(settings).length === 0) {
-          const savedSettings = localStorage.getItem("settings");
-          const savedZametkaSettings = localStorage.getItem(STORAGE_KEYS.SETTINGS);
-          const savedZametkaSettingsDirect = localStorage.getItem("zametka_settings");
-          
-          let parsedSettings = null;
-          
-          if (savedSettings) {
-            console.log("Загружаем настройки из localStorage (ключ settings)...");
-            try {
-              parsedSettings = JSON.parse(savedSettings);
-            } catch (e) {
-              console.error("Ошибка при разборе настроек из settings:", e);
-            }
-          } else if (savedZametkaSettings) {
-            console.log(`Загружаем настройки из localStorage (ключ ${STORAGE_KEYS.SETTINGS})...`);
-            try {
-              parsedSettings = JSON.parse(savedZametkaSettings);
-            } catch (e) {
-              console.error(`Ошибка при разборе настроек из ${STORAGE_KEYS.SETTINGS}:`, e);
-            }
-          } else if (savedZametkaSettingsDirect) {
-            console.log("Загружаем настройки из localStorage (ключ zametka_settings)...");
-            try {
-              parsedSettings = JSON.parse(savedZametkaSettingsDirect);
-            } catch (e) {
-              console.error("Ошибка при разборе настроек из zametka_settings:", e);
-            }
-          }
-          
-          if (parsedSettings && typeof parsedSettings === "object") {
-            console.log("Настройки загружены");
-            setSettings(parsedSettings);
-            
-            // Сохраняем в обоих ключах для совместимости
-            localStorage.setItem("settings", JSON.stringify(parsedSettings));
-            localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(parsedSettings));
-          }
-        }
-
-        // Проверяем, что данные загрузились
-        setTimeout(() => {
-          console.log("Данные после инициализации:", {
-            notes: useNotesStore.getState().notes.length,
-            transactions: useFinancesStore.getState().transactions.length,
-            debts: useDebtsStore.getState().debts.length,
-            settings: useSettingsStore.getState().settings ? Object.keys(useSettingsStore.getState().settings).length : 0,
-          });
-        }, 500);
+        
+        setInitialized(true);
       } catch (error) {
-        console.error("Ошибка при загрузке данных из localStorage:", error);
+        console.error("Ошибка при ручной инициализации:", error);
+      }
+    };
+
+    // Выполняем инициализацию немедленно
+    if (!initialized) {
+      console.log("Запуск принудительной инициализации");
+      initializeData();
+    }
+  }, [initialized, setNotes, setTransactions, setDebts, setSettings]);
+
+  // Логируем текущее состояние хранилищ после инициализации
+  useEffect(() => {
+    if (initialized) {
+      console.log("Состояние хранилищ после инициализации:", {
+        notes: notes.length > 0 ? `${notes.length} заметок` : "Нет заметок",
+        transactions: transactions.length > 0 ? `${transactions.length} транзакций` : "Нет транзакций",
+        debts: debts.length > 0 ? `${debts.length} долгов` : "Нет долгов",
+        settings: settings ? "Настройки загружены" : "Нет настроек"
+      });
+      
+      // Если после инициализации данные все еще не загружены, 
+      // но есть в localStorage, принудительно загружаем их снова
+      if (notes.length === 0) {
+        const notesData = localStorage.getItem("zametka_notes");
+        if (notesData) {
+          try {
+            const parsedNotes = JSON.parse(notesData);
+            if (Array.isArray(parsedNotes) && parsedNotes.length > 0) {
+              console.log("ПРИНУДИТЕЛЬНАЯ загрузка заметок из localStorage");
+              setNotes(parsedNotes);
+              
+              // Обновляем Zustand storage вручную
+              localStorage.setItem("notes", notesData);
+            }
+          } catch (e) {
+            console.error("Ошибка при разборе заметок:", e);
+          }
+        }
       }
     }
-  }, [notes.length, transactions.length, debts.length, settings, setNotes, setTransactions, setDebts, setSettings]);
+  }, [initialized, notes, transactions, debts, settings, setNotes]);
 
-  return null;
+  return (
+    <div style={{ display: 'none' }}>
+      {initialized ? "Данные инициализированы" : "Инициализация хранилищ..."}
+    </div>
+  );
 }
 
 export default StorageInitializer; 

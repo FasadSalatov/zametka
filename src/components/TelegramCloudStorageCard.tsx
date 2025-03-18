@@ -19,9 +19,9 @@ export default function TelegramCloudStorageCard() {
   } = useTelegramStorage();
 
   // Получаем количество локальных данных
-  const { notes } = useNotesStore();
-  const { transactions } = useFinancesStore();
-  const { debts } = useDebtsStore();
+  const { notes, setNotes } = useNotesStore();
+  const { transactions, setTransactions } = useFinancesStore();
+  const { debts, setDebts } = useDebtsStore();
 
   const [localCounts, setLocalCounts] = useState({
     notes: 0,
@@ -73,10 +73,76 @@ export default function TelegramCloudStorageCard() {
     try {
       if (!isLoading) {
         console.log('Синхронизация данных с облаком...');
+        
+        // Принудительная загрузка данных из localStorage перед синхронизацией
+        let needsDelay = false;
+        
+        // Проверяем заметки
+        if (notes.length === 0) {
+          const notesStr = localStorage.getItem("zametka_notes");
+          if (notesStr) {
+            try {
+              const parsedNotes = JSON.parse(notesStr);
+              if (Array.isArray(parsedNotes) && parsedNotes.length > 0) {
+                console.log(`CloudStorage: принудительная загрузка ${parsedNotes.length} заметок`);
+                setNotes(parsedNotes);
+                needsDelay = true;
+              }
+            } catch (e) {
+              console.error("Ошибка при загрузке заметок перед синхронизацией:", e);
+            }
+          }
+        }
+        
+        // Проверяем финансы
+        if (transactions.length === 0) {
+          const financesStr = localStorage.getItem("zametka_finances");
+          if (financesStr) {
+            try {
+              const parsedFinances = JSON.parse(financesStr);
+              if (Array.isArray(parsedFinances) && parsedFinances.length > 0) {
+                console.log(`CloudStorage: принудительная загрузка ${parsedFinances.length} финансов`);
+                setTransactions(parsedFinances);
+                needsDelay = true;
+              }
+            } catch (e) {
+              console.error("Ошибка при загрузке финансов перед синхронизацией:", e);
+            }
+          }
+        }
+        
+        // Проверяем долги
+        if (debts.length === 0) {
+          const debtsStr = localStorage.getItem("zametka_debts");
+          if (debtsStr) {
+            try {
+              const parsedDebts = JSON.parse(debtsStr);
+              if (Array.isArray(parsedDebts) && parsedDebts.length > 0) {
+                console.log(`CloudStorage: принудительная загрузка ${parsedDebts.length} долгов`);
+                setDebts(parsedDebts);
+                needsDelay = true;
+              }
+            } catch (e) {
+              console.error("Ошибка при загрузке долгов перед синхронизацией:", e);
+            }
+          }
+        }
+        
+        // Даем время на обновление хранилища
+        if (needsDelay) {
+          console.log("Ожидание обновления хранилища...");
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
+        
+        // Получаем актуальные данные из хранилища Zustand напрямую
+        const actualNotes = useNotesStore.getState().notes;
+        const actualTransactions = useFinancesStore.getState().transactions;
+        const actualDebts = useDebtsStore.getState().debts;
+        
         console.log('Локальные данные перед синхронизацией:', {
-          notes: notes.length,
-          transactions: transactions.length,
-          debts: debts.length
+          notes: actualNotes.length,
+          transactions: actualTransactions.length,
+          debts: actualDebts.length
         });
         
         const success = await syncData();

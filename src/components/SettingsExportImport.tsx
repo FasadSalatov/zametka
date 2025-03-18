@@ -67,17 +67,45 @@ export default function SettingsExportImport() {
   const handleExport = async () => {
     setIsExporting(true);
     try {
+      // Попытка принудительно загрузить данные перед экспортом
+      const zametkaNotesStr = localStorage.getItem("zametka_notes");
+      if (zametkaNotesStr && notes.length === 0) {
+        try {
+          const parsedNotes = JSON.parse(zametkaNotesStr);
+          if (Array.isArray(parsedNotes) && parsedNotes.length > 0) {
+            console.log(`Экспорт: принудительная загрузка ${parsedNotes.length} заметок из localStorage`);
+            setNotes(parsedNotes);
+            // Небольшая задержка, чтобы хранилище обновилось
+            await new Promise(resolve => setTimeout(resolve, 100));
+          }
+        } catch (e) {
+          console.error("Ошибка при разборе заметок перед экспортом:", e);
+        }
+      }
+      
+      // Проверяем, что данные действительно есть в хранилище
+      console.log('Данные для экспорта ПОСЛЕ проверки:', {
+        notes: useNotesStore.getState().notes.length,
+        transactions: useFinancesStore.getState().transactions.length,
+        debts: useDebtsStore.getState().debts.length,
+      });
+      
+      // Принудительно используем актуальные данные из хранилища
+      const currentNotes = useNotesStore.getState().notes;
+      const currentTransactions = useFinancesStore.getState().transactions;
+      const currentDebts = useDebtsStore.getState().debts;
+      
       console.log('Экспорт данных:', {
-        notes: notes.length,
-        transactions: transactions.length,
-        debts: debts.length,
+        notes: currentNotes.length,
+        transactions: currentTransactions.length,
+        debts: currentDebts.length,
         settings: settings
       });
       
       const exportData: CloudData = {
-        notes,
-        finances: transactions,
-        debts,
+        notes: currentNotes,
+        finances: currentTransactions,
+        debts: currentDebts,
         settings
       };
       

@@ -122,20 +122,50 @@ export const TelegramStorageProvider: React.FC<{ children: ReactNode }> = ({ chi
     setError(null);
 
     try {
+      // Получаем актуальные данные напрямую из хранилища
+      const currentNotes = useNotesStore.getState().notes;
+      const currentTransactions = useFinancesStore.getState().transactions;
+      const currentDebts = useDebtsStore.getState().debts;
+      const currentSettings = useSettingsStore.getState().settings;
+      
       console.log('Синхронизация данных с облаком:');
-      console.log('Данные для синхронизации:', {
-        notes: notes.length,
-        transactions: transactions.length,
-        debts: debts.length, 
-        settings: settings ? Object.keys(settings).length : 0
+      console.log('Актуальные данные для синхронизации:', {
+        notes: currentNotes.length,
+        transactions: currentTransactions.length,
+        debts: currentDebts.length, 
+        settings: currentSettings ? Object.keys(currentSettings).length : 0
       });
+      
+      // Проверяем, есть ли данные для синхронизации
+      const hasData = currentNotes.length > 0 || 
+                      currentTransactions.length > 0 || 
+                      currentDebts.length > 0 || 
+                      (currentSettings && Object.keys(currentSettings).length > 0);
+      
+      if (!hasData) {
+        console.warn('Нет данных для синхронизации с облаком!');
+        
+        // Еще одна попытка загрузить данные из localStorage
+        const notesStr = localStorage.getItem("zametka_notes");
+        if (notesStr) {
+          try {
+            const parsedNotes = JSON.parse(notesStr);
+            if (Array.isArray(parsedNotes) && parsedNotes.length > 0) {
+              console.log(`TelegramStorage: Найдены заметки в localStorage (${parsedNotes.length})`);
+              currentNotes.push(...parsedNotes);
+            }
+          } catch (e) {
+            console.error('Ошибка при парсинге заметок из localStorage:', e);
+          }
+        }
+      }
 
       // Сохраняем все данные в облако
       const results = await Promise.all([
-        saveToCloud(STORAGE_KEYS.NOTES, notes),
-        saveToCloud(STORAGE_KEYS.FINANCES, transactions),
-        saveToCloud(STORAGE_KEYS.DEBTS, debts),
-        saveToCloud(STORAGE_KEYS.SETTINGS, settings),
+        saveToCloud(STORAGE_KEYS.NOTES, currentNotes),
+        saveToCloud(STORAGE_KEYS.FINANCES, currentTransactions),
+        saveToCloud(STORAGE_KEYS.DEBTS, currentDebts),
+        saveToCloud(STORAGE_KEYS.SETTINGS, currentSettings),
       ]);
       
       console.log('Результаты синхронизации:', results);
@@ -148,9 +178,9 @@ export const TelegramStorageProvider: React.FC<{ children: ReactNode }> = ({ chi
         await saveToCloud(STORAGE_KEYS.LAST_SYNC, now.toISOString());
         
         setStatus({
-          notes: { isLoaded: true, count: notes.length, timestamp: now.getTime(), error: null },
-          finances: { isLoaded: true, count: transactions.length, timestamp: now.getTime(), error: null },
-          debts: { isLoaded: true, count: debts.length, timestamp: now.getTime(), error: null },
+          notes: { isLoaded: true, count: currentNotes.length, timestamp: now.getTime(), error: null },
+          finances: { isLoaded: true, count: currentTransactions.length, timestamp: now.getTime(), error: null },
+          debts: { isLoaded: true, count: currentDebts.length, timestamp: now.getTime(), error: null },
           settings: { isLoaded: true, count: 1, timestamp: now.getTime(), error: null },
         });
         
