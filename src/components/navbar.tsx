@@ -17,7 +17,7 @@ export function Navbar() {
 
   return (
     <nav className="sticky top-0 z-10 bg-background/80 backdrop-blur-xl shadow-sm" style={{ 
-      paddingTop: `calc(var(--combined-safe-area-inset-top) + 1.5rem)`,
+      paddingTop: `calc(var(--combined-safe-area-inset-top) + 2rem)`,
       paddingLeft: `var(--combined-safe-area-inset-left)`,
       paddingRight: `var(--combined-safe-area-inset-right)` 
     }}>
