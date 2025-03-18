@@ -145,12 +145,12 @@ export function useTelegramWebApp(): TelegramWebAppState {
   
   const requestFullscreen = () => {
     if (webApp && isFullscreenSupported && !isFullscreen) {
-      try {
-        webApp.requestFullscreen?.();
+    try {
+         webApp.requestFullscreen?.();
       } catch (error) {
         console.warn('Ошибка при запросе полноэкранного режима:', error);
+         }
       }
-    }
   };
   
   const exitFullscreen = () => {
