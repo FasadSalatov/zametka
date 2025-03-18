@@ -7,62 +7,83 @@ import SettingsExportImport from '@/components/SettingsExportImport';
 
 export default function SettingsPage() {
   return (
-    <div className="container mx-auto py-6 space-y-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Настройки</h1>
-        <p className="text-muted-foreground">Управление приложением и параметрами</p>
+    <div className="pb-16">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold mb-1">Настройки</h1>
+        <p className="text-sm text-muted-foreground">Управление приложением и данными</p>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="space-y-4 p-4 bg-card rounded-lg border border-border">
-          <h2 className="text-xl font-semibold mb-4">Внешний вид</h2>
-          
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="font-medium">Тема оформления</h3>
-              <p className="text-sm text-muted-foreground">Выберите светлую или темную тему</p>
-            </div>
-            <ModeToggle />
+      <div className="space-y-4">
+        {/* Основные настройки */}
+        <div className="bg-card rounded-lg border border-border overflow-hidden">
+          <div className="p-4 border-b border-border bg-muted/30">
+            <h2 className="text-lg font-medium">Основные настройки</h2>
           </div>
           
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="font-medium">Полноэкранный режим</h3>
-              <p className="text-sm text-muted-foreground">Переключение полноэкранного режима в Telegram</p>
+          <div className="divide-y divide-border">
+            {/* Тема оформления */}
+            <div className="flex items-center justify-between p-4">
+              <div>
+                <h3 className="font-medium mb-0.5">Тема оформления</h3>
+                <p className="text-xs text-muted-foreground">Светлая или темная тема</p>
+              </div>
+              <ModeToggle />
             </div>
-            <TelegramFullscreenButton />
+            
+            {/* Полноэкранный режим */}
+            <div className="flex items-center justify-between p-4">
+              <div>
+                <h3 className="font-medium mb-0.5">Полноэкранный режим</h3>
+                <p className="text-xs text-muted-foreground">Для Telegram Mini App</p>
+              </div>
+              <TelegramFullscreenButton />
+            </div>
           </div>
         </div>
         
-        <SettingsExportImport 
-          onDataImported={(data) => {
-            // Перезагружаем страницу для применения импортированных данных
-            if (typeof window !== 'undefined') {
-              window.location.reload();
-            }
-          }}
-          onError={(error) => {
-            console.error('Ошибка при импорте/экспорте:', error);
-          }}
-        />
-      </div>
-      
-      <div className="p-4 bg-card rounded-lg border border-border">
-        <h2 className="text-xl font-semibold mb-4">О приложении</h2>
+        {/* Экспорт и импорт */}
+        <div className="bg-card rounded-lg border border-border overflow-hidden">
+          <div className="p-4 border-b border-border bg-muted/30">
+            <h2 className="text-lg font-medium">Данные</h2>
+          </div>
+          
+          <div className="p-4">
+            <SettingsExportImport 
+              onDataImported={(data) => {
+                if (typeof window !== 'undefined') {
+                  window.location.reload();
+                }
+              }}
+              onError={(error) => {
+                console.error('Ошибка при импорте/экспорте:', error);
+              }}
+            />
+          </div>
+        </div>
         
-        <div className="space-y-2">
-          <p className="text-sm">
-            <span className="font-medium">Zametka</span> - приложение для управления личными заметками, 
-            финансами и долгами, оптимизированное для работы в Telegram.
-          </p>
+        {/* О приложении */}
+        <div className="bg-card rounded-lg border border-border overflow-hidden">
+          <div className="p-4 border-b border-border bg-muted/30">
+            <h2 className="text-lg font-medium">О приложении</h2>
+          </div>
           
-          <p className="text-sm text-muted-foreground">
-            Версия: 1.0.0
-          </p>
-          
-          <p className="text-sm text-muted-foreground">
-            &copy; {new Date().getFullYear()}
-          </p>
+          <div className="p-4">
+            <div className="space-y-3">
+              <p className="text-sm">
+                <span className="font-medium">Zametka</span> — приложение для управления заметками, 
+                финансами и долгами в Telegram
+              </p>
+              
+              <div className="flex justify-between items-center text-sm py-2 px-3 rounded bg-muted/30">
+                <span className="text-muted-foreground">Версия</span>
+                <span className="font-medium">1.0.0</span>
+              </div>
+              
+              <p className="text-xs text-muted-foreground text-center">
+                &copy; {new Date().getFullYear()}
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     </div>

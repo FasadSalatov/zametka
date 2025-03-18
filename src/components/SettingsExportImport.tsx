@@ -173,45 +173,64 @@ export default function SettingsExportImport({ onDataImported, onError }: Settin
   };
 
   return (
-    <div className="space-y-4 p-4 bg-card rounded-lg border border-border">
-      <h2 className="text-xl font-semibold mb-4">Экспорт и импорт данных</h2>
-      
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <h3 className="text-lg font-medium">Файловые операции</h3>
-          <p className="text-sm text-muted-foreground">Экспорт и импорт через JSON-файлы</p>
-          <div className="flex flex-col gap-2">
+    <div className="space-y-4">
+      {/* Действия с данными */}
+      <div className="space-y-3">
+        <div className="flex flex-col gap-2">
+          <h3 className="text-sm font-medium">Резервное копирование</h3>
+        
+          {/* Кнопки экспорта и сохранения */}
+          <div className="grid grid-cols-1 gap-2">
             <Button 
               variant="primary" 
               onClick={handleExportAll} 
               disabled={loading.exportAll}
               data-haptic="medium"
+              className="h-12 text-base flex justify-center items-center"
             >
-              {loading.exportAll ? 'Экспорт...' : 'Экспортировать все данные'}
+              <svg xmlns="http://www.w3.org/2000/svg" className="mr-2" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              {loading.exportAll ? 'Экспорт...' : 'Экспортировать в файл'}
             </Button>
             
-            <Button 
-              variant="secondary" 
-              onClick={handleImportAll} 
-              disabled={loading.importAll}
-              data-haptic="medium"
-            >
-              {loading.importAll ? 'Импорт...' : 'Импортировать из файла'}
-            </Button>
-          </div>
-        </div>
-        
-        <div className="space-y-2">
-          <h3 className="text-lg font-medium">Облачное хранилище</h3>
-          <p className="text-sm text-muted-foreground">Синхронизация через Telegram Cloud</p>
-          <div className="flex flex-col gap-2">
             <Button 
               variant="accent" 
               onClick={handleSaveToCloud} 
               disabled={loading.saveToCloud}
               data-haptic="medium"
+              className="h-12 text-base flex justify-center items-center"
             >
-              {loading.saveToCloud ? 'Сохранение...' : 'Сохранить в облако Telegram'}
+              <svg xmlns="http://www.w3.org/2000/svg" className="mr-2" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="17 8 12 3 7 8"></polyline>
+                <line x1="12" y1="3" x2="12" y2="15"></line>
+              </svg>
+              {loading.saveToCloud ? 'Сохранение...' : 'Сохранить в облако TG'}
+            </Button>
+          </div>
+        </div>
+        
+        <div className="flex flex-col gap-2">
+          <h3 className="text-sm font-medium">Восстановление данных</h3>
+        
+          {/* Кнопки импорта и загрузки */}
+          <div className="grid grid-cols-1 gap-2">
+            <Button 
+              variant="secondary" 
+              onClick={handleImportAll} 
+              disabled={loading.importAll}
+              data-haptic="medium"
+              className="h-12 text-base flex justify-center items-center"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="mr-2" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="17 8 12 3 7 8"></polyline>
+                <line x1="12" y1="3" x2="12" y2="15"></line>
+              </svg>
+              {loading.importAll ? 'Импорт...' : 'Импортировать из файла'}
             </Button>
             
             <Button 
@@ -219,22 +238,30 @@ export default function SettingsExportImport({ onDataImported, onError }: Settin
               onClick={handleLoadFromCloud} 
               disabled={loading.loadFromCloud}
               data-haptic="medium"
+              className="h-12 text-base flex justify-center items-center"
             >
-              {loading.loadFromCloud ? 'Загрузка...' : 'Загрузить из облака Telegram'}
+              <svg xmlns="http://www.w3.org/2000/svg" className="mr-2" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              {loading.loadFromCloud ? 'Загрузка...' : 'Загрузить из облака TG'}
             </Button>
           </div>
         </div>
       </div>
       
+      {/* Сообщение о результате операции */}
       {lastAction && (
-        <div className="mt-4 p-2 bg-secondary/20 rounded text-sm text-center">
+        <div className="mt-2 p-3 bg-muted/30 rounded text-sm text-center animate-fadeIn">
           {lastAction}
         </div>
       )}
       
-      <div className="mt-4 text-xs text-muted-foreground">
-        <p>Примечание: Экспортированные данные включают заметки, финансы, долги и настройки приложения.</p>
-        <p>При импорте данных текущие данные будут заменены импортированными.</p>
+      {/* Информация */}
+      <div className="mt-4 text-xs text-muted-foreground bg-muted/20 p-3 rounded-lg">
+        <p className="mb-1">• Экспортированные данные включают заметки, финансы, долги и настройки.</p>
+        <p>• При импорте текущие данные будут заменены импортированными.</p>
       </div>
     </div>
   );

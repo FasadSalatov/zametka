@@ -24,24 +24,32 @@ export async function exportDataWithTelegram(data: any, filename: string): Promi
     // Создаем Blob и URL для скачивания
     const blob = new Blob([jsonString], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
-    // @ts-ignore
+    
     // Используем Telegram API для открытия ссылки
+    // @ts-ignore
     if (tgApp.openLink) {
       // @ts-ignore
       // Подтверждаем действие через Telegram UI
       tgApp.showConfirm(
-        'Вы хотите экспортировать данные?', 
+        'Экспортировать ваши данные в файл? Вы сможете импортировать их позже.', 
         (confirmed: boolean) => {
           if (confirmed) {
             // Открываем ссылку для скачивания
             // @ts-ignore
             tgApp.openLink(url);
             
+            // Активируем вибрацию
+            // @ts-ignore
+            if (tgApp.HapticFeedback) {
+              // @ts-ignore
+              tgApp.HapticFeedback.impactOccurred('medium');
+            }
+            
             // Показываем уведомление об успешном экспорте
             // @ts-ignore
-              tgApp.showPopup({
-              title: 'Экспорт данных',
-              message: 'Данные успешно экспортированы',
+            tgApp.showPopup({
+              title: 'Успешно',
+              message: 'Данные экспортированы. Сохраните файл, чтобы не потерять его.',
               buttons: [{type: 'ok'}]
             });
           }
@@ -68,7 +76,7 @@ export async function exportDataWithTelegram(data: any, filename: string): Promi
       // @ts-ignore
       tgApp.showPopup({
         title: 'Ошибка экспорта',
-        message: 'Не удалось экспортировать данные',
+        message: 'Не удалось экспортировать данные. Попробуйте еще раз или обратитесь в поддержку.',
         buttons: [{type: 'ok'}]
       });
     }
@@ -92,7 +100,7 @@ export async function importDataWithTelegram(): Promise<any> {
       // Подтверждаем действие через Telegram UI
       // @ts-ignore
       tgApp.showConfirm(
-        'Вы хотите импортировать данные? Это может заменить существующие данные.', 
+        'Восстановить данные из файла? Это заменит все ваши текущие данные.', 
         (confirmed: boolean) => {
           if (confirmed) {
             // Создаем невидимый input для выбора файла
@@ -114,13 +122,25 @@ export async function importDataWithTelegram(): Promise<any> {
                   const content = e.target?.result as string;
                   const data = JSON.parse(content);
                   
+                  // Проверяем, что данные соответствуют формату
+                  if (!isValidImportData(data)) {
+                    throw new Error('Неверный формат файла');
+                  }
+                  
+                  // Активируем вибрацию
+                  // @ts-ignore
+                  if (tgApp.HapticFeedback) {
+                    // @ts-ignore
+                    tgApp.HapticFeedback.notificationOccurred('success');
+                  }
+                  
                   // Показываем успешное сообщение
                   // @ts-ignore
                   if (tgApp.showPopup) {
                     // @ts-ignore
                     tgApp.showPopup({
-                      title: 'Импорт данных',
-                      message: 'Данные успешно импортированы',
+                      title: 'Успешно',
+                      message: 'Данные импортированы. Перезагрузка страницы...',
                       buttons: [{type: 'ok'}]
                     });
                   }
@@ -128,12 +148,19 @@ export async function importDataWithTelegram(): Promise<any> {
                   // Возвращаем импортированные данные
                   resolve(data);
                 } catch (error) {
+                  // Активируем вибрацию ошибки
+                  // @ts-ignore
+                  if (tgApp.HapticFeedback) {
+                    // @ts-ignore
+                    tgApp.HapticFeedback.notificationOccurred('error');
+                  }
+                  
                   // @ts-ignore
                   if (tgApp.showPopup) {
                     // @ts-ignore
                     tgApp.showPopup({
                       title: 'Ошибка импорта',
-                      message: 'Неверный формат файла',
+                      message: 'Выбранный файл не содержит корректных данных для восстановления.',
                       buttons: [{type: 'ok'}]
                     });
                   }
@@ -142,12 +169,19 @@ export async function importDataWithTelegram(): Promise<any> {
               };
               
               reader.onerror = () => {
+                // Активируем вибрацию ошибки
+                // @ts-ignore
+                if (tgApp.HapticFeedback) {
+                  // @ts-ignore
+                  tgApp.HapticFeedback.notificationOccurred('error');
+                }
+                
                 // @ts-ignore
                 if (tgApp.showPopup) {
                   // @ts-ignore
                   tgApp.showPopup({
                     title: 'Ошибка импорта',
-                    message: 'Не удалось прочитать файл',
+                    message: 'Не удалось прочитать файл. Проверьте доступ к файлу.',
                     buttons: [{type: 'ok'}]
                   });
                 }
@@ -159,7 +193,7 @@ export async function importDataWithTelegram(): Promise<any> {
             
             // Активируем вибрацию
             // @ts-ignore
-              if (tgApp.HapticFeedback) {
+            if (tgApp.HapticFeedback) {
               // @ts-ignore
               tgApp.HapticFeedback.impactOccurred('medium');
             }
@@ -250,4 +284,23 @@ export async function loadFromTelegramCloud(key: string): Promise<any> {
       resolve(null);
     }
   });
+}
+
+/**
+ * Проверяет, что данные соответствуют ожидаемому формату для импорта
+ */
+function isValidImportData(data: any): boolean {
+  // Проверяем, что данные содержат хотя бы один из ожидаемых ключей
+  const hasExpectedKeys = 
+    Array.isArray(data.notes) || 
+    Array.isArray(data.finances) || 
+    Array.isArray(data.debts) || 
+    (data.settings && typeof data.settings === 'object');
+  
+  // Проверяем, что данные имеют ожидаемый формат (версия или дата экспорта)
+  const hasMetadata = 
+    (data.version && typeof data.version === 'string') || 
+    (data.exportDate && typeof data.exportDate === 'string');
+  
+  return hasExpectedKeys && hasMetadata;
 } 
