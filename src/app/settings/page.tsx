@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import SettingsExportImport from '@/components/SettingsExportImport';
 import TelegramFullscreenButton from '@/components/TelegramFullscreenButton';
+import TelegramCloudStorageSettings from '@/components/settings/TelegramCloudStorageSettings';
 
 export default function SettingsPage() {
   const [theme, setTheme] = useState<string>('dark');
@@ -37,7 +38,12 @@ export default function SettingsPage() {
       
       <div className="space-y-8">
         <div className="bg-card border border-border rounded-xl p-4">
-          <h2 className="text-xl font-medium mb-4">Данные</h2>
+          <h2 className="text-xl font-medium mb-4">Облачное хранилище</h2>
+          <TelegramCloudStorageSettings />
+        </div>
+        
+        <div className="bg-card border border-border rounded-xl p-4">
+          <h2 className="text-xl font-medium mb-4">Локальное резервное копирование</h2>
           <SettingsExportImport />
         </div>
         
@@ -99,7 +105,7 @@ export default function SettingsPage() {
           <div className="text-muted-foreground text-sm space-y-2">
             <p>Версия: 1.0.0</p>
             <p>Приложение для удобного ведения заметок, учета финансов и долгов.</p>
-            <p>Все данные хранятся локально на вашем устройстве.</p>
+            <p>Данные хранятся локально на вашем устройстве и в облачном хранилище Telegram (если включено).</p>
           </div>
         </div>
       </div>

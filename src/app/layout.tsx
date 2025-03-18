@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/providers/theme-provider";
-// import { CloudStorageProvider } from "@/components/providers/cloud-storage-provider";
+import { TelegramStorageProvider } from "@/components/providers/telegram-storage-provider";
 import { Navbar } from "@/components/navbar";
 import Footer from "@/components/Footer";
 import Script from "next/script";
@@ -185,14 +185,15 @@ export default function RootLayout({
       </head>
       <body className={`${inter.className} antialiased overflow-x-hidden`}>
         <ThemeProvider defaultTheme="dark">
-          {/* Временно убрана синхронизация */}
-          <div className="min-h-screen flex flex-col">
-            <Navbar />
-            <main className="flex-1 w-full px-3 sm:px-4 py-4 sm:py-6 mx-auto max-w-full sm:max-w-7xl">
-              {children}
-            </main>
-            <Footer />
-          </div>
+          <TelegramStorageProvider>
+            <div className="min-h-screen flex flex-col">
+              <Navbar />
+              <main className="flex-1 w-full px-3 sm:px-4 py-4 sm:py-6 mx-auto max-w-full sm:max-w-7xl">
+                {children}
+              </main>
+              <Footer />
+            </div>
+          </TelegramStorageProvider>
         </ThemeProvider>
       </body>
     </html>

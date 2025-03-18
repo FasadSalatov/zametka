@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useTelegramWebApp } from '@/hooks/useTelegramWebApp';
+import { isCloudStorageAvailable, cloudStorageSetItem } from '@/utils/cloudStorage';
 
 interface FullscreenButtonProps {
   buttonText?: string;
@@ -31,47 +32,47 @@ const TelegramFullscreenButton = ({
     }
     
     // Загружаем сохраненное состояние полноэкранного режима при первом рендеринге
-    if (isAvailable && isFullscreenSupported && typeof window !== 'undefined' && window.Telegram?.WebApp) {
-      const tgApp = window.Telegram.WebApp;
-      
-      // @ts-ignore - CloudStorage существует в новых версиях API 
-      if (tgApp.CloudStorage) {
-        // @ts-ignore - CloudStorage существует в новых версиях API
-        tgApp.CloudStorage.getItem('fullscreen_enabled', (err: any, value: string | null) => {
-          if (!err && value === 'true' && !isFullscreen) {
+    const loadFullscreenSetting = async () => {
+      if (isAvailable && isFullscreenSupported && isCloudStorageAvailable()) {
+        try {
+          const stored = localStorage.getItem('fullscreen_enabled');
+          if (stored === 'true' && !isFullscreen) {
             // Восстанавливаем полноэкранный режим с небольшой задержкой
             setTimeout(() => {
               toggleFullscreen();
             }, 1000);
           }
-        });
+        } catch (e) {
+          console.error('Ошибка при загрузке настроек полноэкранного режима:', e);
+        }
       }
-    }
+    };
+    
+    loadFullscreenSetting();
   }, [isAvailable, isFullscreenSupported, showVersionWarning, isFullscreen, toggleFullscreen]);
 
   // Сохраняем состояние полноэкранного режима при его изменении
   useEffect(() => {
-    if (isAvailable && isFullscreenSupported && typeof window !== 'undefined' && window.Telegram?.WebApp) {
-      const tgApp = window.Telegram.WebApp;
-      
-      // @ts-ignore - CloudStorage существует в новых версиях API
-      if (tgApp.CloudStorage && isFullscreen !== null) {
-        // @ts-ignore - CloudStorage существует в новых версиях API
-        tgApp.CloudStorage.setItem('fullscreen_enabled', isFullscreen ? 'true' : 'false');
+    if (isAvailable && isFullscreenSupported) {
+      try {
+        localStorage.setItem('fullscreen_enabled', isFullscreen ? 'true' : 'false');
+        
+        // Сохраняем также в CloudStorage, если доступно
+        if (isCloudStorageAvailable()) {
+          cloudStorageSetItem('fullscreen_enabled', isFullscreen ? 'true' : 'false');
+        }
+      } catch (e) {
+        console.error('Ошибка при сохранении настроек полноэкранного режима:', e);
       }
     }
   }, [isAvailable, isFullscreenSupported, isFullscreen]);
 
   // Обертка для добавления тактильной обратной связи
   const handleToggleFullscreen = () => {
-    if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
-      // @ts-ignore - HapticFeedback существует в новых версиях API
-      if (window.Telegram.WebApp.HapticFeedback) {
-        // @ts-ignore - HapticFeedback существует в новых версиях API
-        window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
-      }
-      toggleFullscreen();
+    if (typeof window !== 'undefined' && window.Telegram?.WebApp?.HapticFeedback) {
+      window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
     }
+    toggleFullscreen();
   };
 
   if (!isAvailable) {

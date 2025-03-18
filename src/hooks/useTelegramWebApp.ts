@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from 'react';
+import type { TelegramWebApp } from '@/types/global';
 
 // Объявление типов для HapticFeedback
 type HapticFeedbackStyle = 'light' | 'medium' | 'heavy' | 'rigid' | 'soft';
@@ -33,46 +34,6 @@ interface PopupParams {
   title: string;
   message: string;
   buttons: PopupButton[];
-}
-
-// Объявление типов в глобальной области видимости
-export type TelegramWebApp = {
-  requestFullscreen?: () => void;
-  exitFullscreen?: () => void;
-  isFullscreen?: boolean;
-  onEvent?: (eventType: string, callback: Function) => void;
-  offEvent?: (eventType: string, callback: Function) => void;
-  ready?: () => void;
-  version?: string;
-  isVersionAtLeast?: (version: string) => boolean;
-  safeAreaInset?: {
-    top: number;
-    right: number;
-    bottom: number;
-    left: number;
-  };
-  contentSafeAreaInset?: {
-    top: number;
-    right: number;
-    bottom: number;
-    left: number;
-  };
-  HapticFeedback?: HapticFeedback;
-  CloudStorage?: CloudStorage;
-  showPopup?: (params: PopupParams, callback?: (buttonId: string) => void) => void;
-  showAlert?: (message: string, callback?: () => void) => void;
-  showConfirm?: (message: string, callback?: (confirmed: boolean) => void) => void;
-  openLink?: (url: string) => void;
-  openTelegramLink?: (url: string) => void;
-  openInvoice?: (url: string, callback?: (status: 'paid' | 'cancelled' | 'failed' | 'pending') => void) => void;
-  platform?: string;
-  colorScheme?: 'light' | 'dark';
-};
-
-interface Window {
-  Telegram?: {
-    WebApp?: TelegramWebApp;
-  };
 }
 
 export interface TelegramWebAppState {
@@ -121,7 +82,7 @@ export function useTelegramWebApp(): TelegramWebAppState {
   
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const tgApp = (window as any).Telegram?.WebApp;
+      const tgApp = window.Telegram?.WebApp;
       
       if (tgApp) {
         setWebApp(tgApp);
@@ -176,19 +137,20 @@ export function useTelegramWebApp(): TelegramWebAppState {
           };
         }
         
+        // Сообщаем Telegram, что приложение готово
         tgApp.ready?.();
       }
     }
   }, []);
   
   const requestFullscreen = () => {
-    // if (webApp && isFullscreenSupported && !isFullscreen) {
-    //   try {
-    //     webApp.requestFullscreen?.();
-    //   } catch (error) {
-    //     console.warn('Ошибка при запросе полноэкранного режима:', error);
-    //   }
-    // }
+    if (webApp && isFullscreenSupported && !isFullscreen) {
+      try {
+        webApp.requestFullscreen?.();
+      } catch (error) {
+        console.warn('Ошибка при запросе полноэкранного режима:', error);
+      }
+    }
   };
   
   const exitFullscreen = () => {
