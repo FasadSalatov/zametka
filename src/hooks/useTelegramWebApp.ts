@@ -36,7 +36,7 @@ interface PopupParams {
 }
 
 // Объявление типов в глобальной области видимости
-type TelegramWebApp = {
+export type TelegramWebApp = {
   requestFullscreen?: () => void;
   exitFullscreen?: () => void;
   isFullscreen?: boolean;

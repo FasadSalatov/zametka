@@ -29,6 +29,7 @@ export function isTelegramWebAppAvailable(): boolean {
     return typeof window !== 'undefined' && 
            !!window.Telegram && 
            !!window.Telegram.WebApp && 
+           // @ts-ignore
            !!window.Telegram.WebApp.version;
   } catch (e) {
     console.error('Ошибка при проверке Telegram WebApp API:', e);
@@ -51,13 +52,16 @@ export function isCloudStorageAvailable(): boolean {
     const tgApp = window.Telegram.WebApp;
     
     // Проверяем наличие API CloudStorage
+    // @ts-ignore
     if (!tgApp.CloudStorage) {
       console.log('CloudStorage API недоступен');
       return false;
     }
     
     // Проверяем необходимые методы CloudStorage
+    // @ts-ignore
     if (typeof tgApp.CloudStorage.getItem !== 'function' || 
+        // @ts-ignore
         typeof tgApp.CloudStorage.setItem !== 'function') {
       console.log('CloudStorage API неполный: отсутствуют необходимые методы');
       return false;
@@ -93,11 +97,13 @@ export async function saveToTelegramCloud(key: string, data: any): Promise<boole
       showNotification(`Ошибка: Данные для ${key} слишком большие (${Math.round(dataStr.length / 1024)}KB). Лимит: 150KB`, "error");
       return false;
     }
-    
+
     // Сохраняем данные в CloudStorage
+    // @ts-ignore
     await tgApp.CloudStorage.setItem(key, dataStr);
     
     // Обновляем время последней синхронизации
+    // @ts-ignore
     await tgApp.CloudStorage.setItem(STORAGE_KEYS.LAST_SYNC, String(Date.now()));
     
     // Выводим хэш данных для отладки
@@ -105,7 +111,9 @@ export async function saveToTelegramCloud(key: string, data: any): Promise<boole
     console.log(`Сохранено в CloudStorage: ${key} (hash: ${hash})`);
     
     // Haptic feedback если доступен
+    // @ts-ignore
     if (tgApp.HapticFeedback) {
+      // @ts-ignore
       tgApp.HapticFeedback.notificationOccurred('success');
     }
     
@@ -130,7 +138,8 @@ export async function loadFromTelegramCloud<T>(key: string): Promise<T | null> {
     }
 
     // @ts-ignore
-    const tgApp = window.Telegram.WebApp;
+        const tgApp = window.Telegram.WebApp;
+    // @ts-ignore
     const dataStr = await tgApp.CloudStorage.getItem(key);
     
     if (!dataStr) {
@@ -357,13 +366,18 @@ export async function getCloudStorageStats(): Promise<CloudStorageStats> {
      const tgApp = window.Telegram.WebApp;
     
     // Получаем время последней синхронизации
+    // @ts-ignore
     const lastSyncStr = await tgApp.CloudStorage.getItem(STORAGE_KEYS.LAST_SYNC);
     const lastSync = lastSyncStr ? parseInt(lastSyncStr, 10) : null;
     
     // Получаем количество элементов для каждого типа данных
+    // @ts-ignore
     const notesStr = await tgApp.CloudStorage.getItem(STORAGE_KEYS.NOTES);
+    // @ts-ignore
     const financesStr = await tgApp.CloudStorage.getItem(STORAGE_KEYS.FINANCES);
+    // @ts-ignore
     const debtsStr = await tgApp.CloudStorage.getItem(STORAGE_KEYS.DEBTS);
+    // @ts-ignore
     const settingsStr = await tgApp.CloudStorage.getItem(STORAGE_KEYS.SETTINGS);
     
     // Вычисляем количество элементов в каждом хранилище

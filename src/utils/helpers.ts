@@ -14,7 +14,9 @@ export function showNotification(message: string, type: NotificationType = 'info
       const tgApp = window.Telegram.WebApp;
       
       // Показываем уведомление через Telegram API
+      // @ts-ignore - Telegram WebApp API может отличаться от типизации
       if (tgApp.showPopup) {
+        // @ts-ignore - Telegram WebApp API может отличаться от типизации
         tgApp.showPopup({
           title: getNotificationTitle(type),
           message,
@@ -22,18 +24,23 @@ export function showNotification(message: string, type: NotificationType = 'info
         });
         
         // Хаптик-обратная связь по типу уведомления
+        // @ts-ignore - Telegram WebApp API может отличаться от типизации
         if (tgApp.HapticFeedback) {
           switch (type) {
             case 'success':
+              // @ts-ignore - Telegram WebApp API может отличаться от типизации
               tgApp.HapticFeedback.notificationOccurred('success');
               break;
             case 'error':
+              // @ts-ignore - Telegram WebApp API может отличаться от типизации
               tgApp.HapticFeedback.notificationOccurred('error');
               break;
             case 'warning':
+              // @ts-ignore - Telegram WebApp API может отличаться от типизации
               tgApp.HapticFeedback.notificationOccurred('warning');
               break;
             default:
+              // @ts-ignore - Telegram WebApp API может отличаться от типизации
               tgApp.HapticFeedback.impactOccurred('light');
           }
         }

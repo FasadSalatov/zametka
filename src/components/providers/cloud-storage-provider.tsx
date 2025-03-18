@@ -6,7 +6,8 @@ import { useDebtsStore } from "@/stores/debts-store";
 import { useNotesStore } from "@/stores/notes-store";
 import { useFinancesStore } from "@/stores/finances-store";
 import { useSettingsStore } from "@/stores/settings-store";
-
+import type { TelegramWebApp } from '@/hooks/useTelegramWebApp';
+  
 // Ключи для хранения данных
 const STORAGE_KEYS = {
   NOTES: 'zametka_notes_data',
@@ -19,15 +20,6 @@ const STORAGE_KEYS = {
 
 // Список всех ключей для CloudStorage
 const ALL_KEYS = Object.values(STORAGE_KEYS);
-
-// Определение типа для Telegram WebApp
-declare global {
-  interface Window {
-    Telegram?: {
-      WebApp?: any;
-    };
-  }
-}
 
 // Статусы загрузки для каждого типа данных
 interface LoadingStatus {
@@ -151,23 +143,6 @@ export function CloudStorageProvider({ children }: CloudStorageProviderProps) {
         
         setLoadingStep('Данные успешно синхронизированы');
         
-        // Показываем уведомление
-        if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
-          const tgApp = window.Telegram.WebApp;
-          
-          if (tgApp.showPopup) {
-            tgApp.showPopup({
-              title: 'Синхронизация',
-              message: 'Данные успешно сохранены в облаке',
-              buttons: [{ type: 'close' }]
-            });
-          }
-          
-          if (tgApp.HapticFeedback) {
-            tgApp.HapticFeedback.notificationOccurred('success');
-          }
-        }
-        
         // Обновляем статус загрузки
         setLoadStatus({
           notes: { isLoaded: true, count: currentData.notes.length, error: null, timestamp: Date.now() },
@@ -186,23 +161,6 @@ export function CloudStorageProvider({ children }: CloudStorageProviderProps) {
         console.error('Не все данные удалось синхронизировать');
         setLoadingStep('Ошибка синхронизации');
         setLoadError('Не все данные удалось сохранить в облако');
-        
-        // Показываем уведомление об ошибке
-        if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
-          const tgApp = window.Telegram.WebApp;
-          
-          if (tgApp.showPopup) {
-            tgApp.showPopup({
-              title: 'Ошибка синхронизации',
-              message: 'Не все данные удалось сохранить в облако',
-              buttons: [{ type: 'close' }]
-            });
-          }
-          
-          if (tgApp.HapticFeedback) {
-            tgApp.HapticFeedback.impactOccurred('error');
-          }
-        }
         
         setTimeout(() => {
           setIsLoading(false);
@@ -227,17 +185,20 @@ export function CloudStorageProvider({ children }: CloudStorageProviderProps) {
 
   // Прямая работа с CloudStorage API через WebApp
   const getAllCloudStorageData = async (): Promise<Record<string, any>> => {
-    if (typeof window === 'undefined' || !window.Telegram?.WebApp?.CloudStorage) {
-      console.error('CloudStorage API недоступен');
-      return {};
-    }
+    // if (typeof window === 'undefined' || !window.Telegram?.WebApp?.CloudStorage) {
+    //   console.error('CloudStorage API недоступен');
+    //   return {};
+    // }
     
     try {
+      // @ts-ignore
       const tgApp = window.Telegram.WebApp;
       
       // Используем getItems для получения всех данных сразу
+      // @ts-ignore
       if (typeof tgApp.CloudStorage.getItems === 'function') {
         return new Promise((resolve) => {
+          // @ts-ignore
           tgApp.CloudStorage.getItems(ALL_KEYS, (error: any, values: Record<string, string | null>) => {
             if (error) {
               console.error('Ошибка при получении данных из CloudStorage:', error);
@@ -344,6 +305,7 @@ export function CloudStorageProvider({ children }: CloudStorageProviderProps) {
       }
       
       // Проверяем доступность CloudStorage API
+      // @ts-ignore
       if (typeof window === 'undefined' || !window.Telegram?.WebApp?.CloudStorage) {
         console.warn('Telegram CloudStorage API недоступен');
         setLoadError('CloudStorage API недоступен');
@@ -383,16 +345,18 @@ export function CloudStorageProvider({ children }: CloudStorageProviderProps) {
         // Показываем уведомление о начале загрузки данных
         if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
           const tgApp = window.Telegram.WebApp;
-          
+          // @ts-ignore
           if (tgApp.showPopup) {
+            // @ts-ignore
             tgApp.showPopup({
               title: 'Загрузка данных',
               message: 'Загружаем ваши данные из облака Telegram...',
               buttons: [{ type: 'close' }]
             });
           }
-          
+          // @ts-ignore
           if (tgApp.HapticFeedback) {
+            // @ts-ignore
             tgApp.HapticFeedback.impactOccurred('light');
           }
         }
@@ -493,7 +457,7 @@ export function CloudStorageProvider({ children }: CloudStorageProviderProps) {
         // Показываем уведомление об успешной загрузке данных
         if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
           const tgApp = window.Telegram.WebApp;
-          
+          // @ts-ignore
           if (dataLoaded && tgApp.showPopup) {
             const loadedItems = [];
             if (loadStatus.notes.isLoaded) loadedItems.push(`Заметки (${loadStatus.notes.count})`);
@@ -504,14 +468,15 @@ export function CloudStorageProvider({ children }: CloudStorageProviderProps) {
             const message = loadedItems.length > 0 
               ? `Загружено: ${loadedItems.join(', ')}`
               : 'Данные не найдены в облаке';
-            
+            // @ts-ignore
             tgApp.showPopup({
               title: 'Данные загружены',
               message,
               buttons: [{ type: 'close' }]
             });
-            
+            // @ts-ignore 
             if (tgApp.HapticFeedback) {
+              // @ts-ignore 
               tgApp.HapticFeedback.impactOccurred('medium');
             }
           }
@@ -549,15 +514,17 @@ export function CloudStorageProvider({ children }: CloudStorageProviderProps) {
         // Показываем уведомление об ошибке
         if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
           const tgApp = window.Telegram.WebApp;
-          
+          // @ts-ignore
           if (tgApp.showPopup) {
+            // @ts-ignore
             tgApp.showPopup({
               title: 'Ошибка загрузки',
               message: 'Не удалось загрузить данные из облака Telegram. Пожалуйста, попробуйте позже.',
               buttons: [{ type: 'close' }]
             });
-            
+            // @ts-ignore
             if (tgApp.HapticFeedback) {
+              // @ts-ignore
               tgApp.HapticFeedback.impactOccurred('error');
             }
           }
@@ -579,15 +546,17 @@ export function CloudStorageProvider({ children }: CloudStorageProviderProps) {
       // Показываем уведомление об ошибке
       if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
         const tgApp = window.Telegram.WebApp;
-        
+        // @ts-ignore
         if (tgApp.showPopup) {
+          // @ts-ignore
           tgApp.showPopup({
             title: 'Ошибка загрузки',
             message: 'Не удалось загрузить данные из облака Telegram. Пожалуйста, попробуйте позже.',
             buttons: [{ type: 'close' }]
           });
-          
+          // @ts-ignore
           if (tgApp.HapticFeedback) {
+            // @ts-ignore
             tgApp.HapticFeedback.impactOccurred('error');
           }
         }
@@ -653,4 +622,4 @@ export function CloudStorageProvider({ children }: CloudStorageProviderProps) {
       {children}
     </CloudStorageContext.Provider>
   );
-} 
+}
