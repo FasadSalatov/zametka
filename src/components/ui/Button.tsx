@@ -26,7 +26,9 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     
     const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
       // Добавляем тактильную обратную связь, если она включена
+        // @ts-ignore
       if (haptic && typeof window !== 'undefined' && window.Telegram?.WebApp?.HapticFeedback) {
+        // @ts-ignore
         window.Telegram.WebApp.HapticFeedback.impactOccurred(haptic);
       }
       
