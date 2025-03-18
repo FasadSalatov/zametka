@@ -55,24 +55,35 @@ const TelegramFullscreenButton = ({
   useEffect(() => {
     if (isAvailable && isFullscreenSupported) {
       try {
-        localStorage.setItem('fullscreen_enabled', isFullscreen ? 'true' : 'false');
-        
-        // Сохраняем также в CloudStorage, если доступно
-        if (isCloudStorageAvailable()) {
-          cloudStorageSetItem('fullscreen_enabled', isFullscreen ? 'true' : 'false');
-        }
+        // Сохраняем только при явном нажатии кнопки, а не при изменении состояния isFullscreen
+        // Смотри handleToggleFullscreen ниже
       } catch (e) {
         console.error('Ошибка при сохранении настроек полноэкранного режима:', e);
       }
     }
-  }, [isAvailable, isFullscreenSupported, isFullscreen]);
+  }, [isAvailable, isFullscreenSupported]);
 
   // Обертка для добавления тактильной обратной связи
   const handleToggleFullscreen = () => {
     if (typeof window !== 'undefined' && window.Telegram?.WebApp?.HapticFeedback) {
       window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
     }
+    
+    // Переключаем состояние и сохраняем новое значение
+    const newState = !isFullscreen;
     toggleFullscreen();
+    
+    // Сохраняем новое состояние в localStorage и CloudStorage
+    try {
+      localStorage.setItem('fullscreen_enabled', newState ? 'true' : 'false');
+      
+      // Сохраняем также в CloudStorage, если доступно
+      if (isCloudStorageAvailable()) {
+        cloudStorageSetItem('fullscreen_enabled', newState ? 'true' : 'false');
+      }
+    } catch (e) {
+      console.error('Ошибка при сохранении настроек полноэкранного режима:', e);
+    }
   };
 
   if (!isAvailable) {

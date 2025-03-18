@@ -78,6 +78,10 @@ export const TelegramStorageProvider: React.FC<{ children: ReactNode }> = ({ chi
   const { transactions, setTransactions } = useFinancesStore();
   const { debts, setDebts } = useDebtsStore();
   const { settings, setSettings } = useSettingsStore();
+  
+  // Счетчик для ограничения частоты синхронизации
+  const [syncDebounceTimer, setSyncDebounceTimer] = useState<NodeJS.Timeout | null>(null);
+  const SYNC_DEBOUNCE_TIME = 5000; // 5 секунд
 
   // Проверка доступности CloudStorage
   useEffect(() => {
@@ -96,6 +100,40 @@ export const TelegramStorageProvider: React.FC<{ children: ReactNode }> = ({ chi
     
     checkAvailability();
   }, []);
+
+  // Автоматическая синхронизация при изменении данных
+  useEffect(() => {
+    // Если CloudStorage недоступен, выходим
+    if (!isAvailable || isLoading) return;
+    
+    // Функция для отложенной синхронизации
+    const debouncedSync = () => {
+      console.log('Изменение данных обнаружено, запланирована синхронизация через 5 секунд');
+      
+      // Если уже есть запланированная синхронизация, отменяем
+      if (syncDebounceTimer) {
+        clearTimeout(syncDebounceTimer);
+      }
+      
+      // Планируем новую синхронизацию
+      const timer = setTimeout(() => {
+        console.log('Выполняется отложенная синхронизация данных');
+        syncData();
+      }, SYNC_DEBOUNCE_TIME);
+      
+      setSyncDebounceTimer(timer);
+    };
+    
+    // Вызываем отложенную синхронизацию
+    debouncedSync();
+    
+    // Очищаем таймер при размонтировании
+    return () => {
+      if (syncDebounceTimer) {
+        clearTimeout(syncDebounceTimer);
+      }
+    };
+  }, [notes, transactions, debts, settings, isAvailable, isLoading]);
 
   // Загружаем время последней синхронизации
   const loadLastSyncTime = async () => {
