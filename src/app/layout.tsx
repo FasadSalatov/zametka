@@ -96,6 +96,32 @@ export default function RootLayout({
               if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
                 document.documentElement.classList.add('touch-device');
               }
+              
+              // Добавляем глобальный обработчик для тактильной обратной связи на кнопках
+              if (window.Telegram && window.Telegram.WebApp) {
+                document.addEventListener('click', function(e) {
+                  // Проверяем, является ли целевой элемент кнопкой или его родителем является кнопка
+                  const target = e.target;
+                  const button = target.tagName === 'BUTTON' ? target : target.closest('button');
+                  const interactiveElement = 
+                    button || 
+                    target.closest('a[role="button"]') || 
+                    target.closest('.btn') || 
+                    (target.className && typeof target.className === 'string' && target.className.includes('btn')) ||
+                    target.closest('[data-haptic]');
+                    
+                  if (interactiveElement && window.Telegram.WebApp.HapticFeedback) {
+                    // Получаем силу вибрации из атрибута data-haptic или используем medium по умолчанию
+                    const hapticType = interactiveElement.getAttribute('data-haptic') || 'medium';
+                    try {
+                      window.Telegram.WebApp.HapticFeedback.impactOccurred(hapticType);
+                    } catch (err) {
+                      console.warn('Failed to trigger haptic feedback:', err);
+                    }
+                  }
+                }, false);
+                console.log('Haptic feedback initialized for all buttons');
+              }
             }
             
             if (document.readyState === 'complete') {
