@@ -333,199 +333,244 @@ export function CloudStorageProvider({ children }: CloudStorageProviderProps) {
     setLoadError(null);
     setLoadingStep('Инициализация...');
     
-    // Проверяем, загружались ли данные в этой сессии
-    const sessionLoaded = sessionStorage.getItem(STORAGE_KEYS.SESSION_LOADED);
-    if (sessionLoaded) {
-      console.log('Данные уже были загружены в этой сессии.');
-      setIsLoading(false);
-      setLoadingStep('');
-      return false;
-    }
-    
-    // Проверяем наличие данных в облаке
-    const cloudData = await checkCloudData();
-    if (!cloudData) {
-      console.log('В облаке нет данных для загрузки');
-      setLoadingStep('Данные в облаке не найдены');
+    try {
+      // Проверяем, загружались ли данные в этой сессии
+      const sessionLoaded = sessionStorage.getItem(STORAGE_KEYS.SESSION_LOADED);
+      if (sessionLoaded) {
+        console.log('Данные уже были загружены в этой сессии.');
+        setIsLoading(false);
+        setLoadingStep('');
+        return false;
+      }
       
-      // Синхронизируем текущие локальные данные с облаком
-      const currentData = getCurrentData();
-      if (currentData.notes.length > 0 || currentData.finances.length > 0 || currentData.debts.length > 0) {
-        setLoadingStep('Выполняем первичную синхронизацию с облаком...');
-        await syncDataToCloud();
-      } else {
+      // Проверяем доступность CloudStorage API
+      if (typeof window === 'undefined' || !window.Telegram?.WebApp?.CloudStorage) {
+        console.warn('Telegram CloudStorage API недоступен');
+        setLoadError('CloudStorage API недоступен');
+        setLoadingStep('Ошибка: CloudStorage API недоступен');
+        setTimeout(() => {
+          setIsLoading(false);
+          setLoadingStep('');
+        }, 3000);
+        return false;
+      }
+      
+      // Проверяем наличие данных в облаке
+      setLoadingStep('Проверка данных в облаке...');
+      const cloudData = await checkCloudData();
+      
+      if (!cloudData) {
+        console.log('В облаке нет данных для загрузки');
+        setLoadingStep('Данные в облаке не найдены');
+        
+        // Синхронизируем текущие локальные данные с облаком
+        const currentData = getCurrentData();
+        if (currentData.notes.length > 0 || currentData.finances.length > 0 || currentData.debts.length > 0) {
+          setLoadingStep('Выполняем первичную синхронизацию с облаком...');
+          await syncDataToCloud();
+        }
+        
         setTimeout(() => {
           setIsLoading(false);
           setLoadingStep('');
         }, 1500);
-      }
-      
-      sessionStorage.setItem(STORAGE_KEYS.SESSION_LOADED, 'true');
-      return false;
-    }
-    
-    try {
-      // Показываем уведомление о начале загрузки данных
-      if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
-        const tgApp = window.Telegram.WebApp;
         
-        if (tgApp.showPopup) {
-          tgApp.showPopup({
-            title: 'Загрузка данных',
-            message: 'Загружаем ваши данные из облака Telegram...',
-            buttons: [{ type: 'close' }]
-          });
-        }
-        
-        if (tgApp.HapticFeedback) {
-          tgApp.HapticFeedback.impactOccurred('light');
-        }
+        sessionStorage.setItem(STORAGE_KEYS.SESSION_LOADED, 'true');
+        return false;
       }
       
-      console.log('Загрузка данных из облака Telegram...');
-      
-      // Получаем данные из результата проверки облака
-      const notes = cloudData[STORAGE_KEYS.NOTES];
-      const finances = cloudData[STORAGE_KEYS.FINANCES];
-      const debts = cloudData[STORAGE_KEYS.DEBTS];
-      const settings = cloudData[STORAGE_KEYS.SETTINGS];
-      
-      let dataLoaded = false;
-      let hasChanges = false;
-      
-      // Обновляем статус заметок
-      if (notes && Array.isArray(notes)) {
-        setLoadingStep('Применение заметок...');
-        const notesChanged = applyLoadedData('notes', notes);
-        dataLoaded = true;
-        hasChanges = hasChanges || notesChanged;
-        console.log('Заметки успешно загружены из облака:', notes.length);
-        setLoadStatus(prev => ({
-          ...prev,
-          notes: { isLoaded: true, count: notes.length, error: null, timestamp: Date.now() }
-        }));
-      } else {
-        setLoadStatus(prev => ({
-          ...prev,
-          notes: { isLoaded: false, count: null, error: 'Заметки не найдены', timestamp: null }
-        }));
-      }
-      
-      // Обновляем статус финансов
-      if (finances && Array.isArray(finances)) {
-        setLoadingStep('Применение финансов...');
-        const financesChanged = applyLoadedData('finances', finances);
-        dataLoaded = true;
-        hasChanges = hasChanges || financesChanged;
-        console.log('Финансы успешно загружены из облака:', finances.length);
-        setLoadStatus(prev => ({
-          ...prev,
-          finances: { isLoaded: true, count: finances.length, error: null, timestamp: Date.now() }
-        }));
-      } else {
-        setLoadStatus(prev => ({
-          ...prev,
-          finances: { isLoaded: false, count: null, error: 'Финансы не найдены', timestamp: null }
-        }));
-      }
-      
-      // Обновляем статус долгов
-      if (debts && Array.isArray(debts)) {
-        setLoadingStep('Применение долгов...');
-        const debtsChanged = applyLoadedData('debts', debts);
-        dataLoaded = true;
-        hasChanges = hasChanges || debtsChanged;
-        console.log('Долги успешно загружены из облака:', debts.length);
-        setLoadStatus(prev => ({
-          ...prev,
-          debts: { isLoaded: true, count: debts.length, error: null, timestamp: Date.now() }
-        }));
-      } else {
-        setLoadStatus(prev => ({
-          ...prev,
-          debts: { isLoaded: false, count: null, error: 'Долги не найдены', timestamp: null }
-        }));
-      }
-      
-      // Обновляем статус настроек
-      if (settings && typeof settings === 'object') {
-        setLoadingStep('Применение настроек...');
-        const settingsChanged = applyLoadedData('settings', settings);
-        dataLoaded = true;
-        hasChanges = hasChanges || settingsChanged;
-        console.log('Настройки успешно загружены из облака');
-        setLoadStatus(prev => ({
-          ...prev,
-          settings: { isLoaded: true, count: 1, error: null, timestamp: Date.now() }
-        }));
-      } else {
-        setLoadStatus(prev => ({
-          ...prev,
-          settings: { isLoaded: false, count: null, error: 'Настройки не найдены', timestamp: null }
-        }));
-      }
-      
-      // Устанавливаем шаг загрузки
-      setLoadingStep(dataLoaded ? 'Данные успешно загружены' : 'Данные не найдены');
-      
-      // Записываем флаг, что данные загружены в этой сессии
-      sessionStorage.setItem(STORAGE_KEYS.SESSION_LOADED, 'true');
-      
-      // Сохраняем время последней загрузки
-      const now = new Date();
-      setLastLoadTime(now.toLocaleString());
-      
-      // Показываем уведомление об успешной загрузке данных
-      if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
-        const tgApp = window.Telegram.WebApp;
-        
-        if (dataLoaded && tgApp.showPopup) {
-          const loadedItems = [];
-          if (loadStatus.notes.isLoaded) loadedItems.push(`Заметки (${loadStatus.notes.count})`);
-          if (loadStatus.finances.isLoaded) loadedItems.push(`Финансы (${loadStatus.finances.count})`);
-          if (loadStatus.debts.isLoaded) loadedItems.push(`Долги (${loadStatus.debts.count})`);
-          if (loadStatus.settings.isLoaded) loadedItems.push('Настройки');
+      try {
+        // Показываем уведомление о начале загрузки данных
+        if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
+          const tgApp = window.Telegram.WebApp;
           
-          const message = loadedItems.length > 0 
-            ? `Загружено: ${loadedItems.join(', ')}`
-            : 'Данные не найдены в облаке';
-          
-          tgApp.showPopup({
-            title: 'Данные загружены',
-            message,
-            buttons: [{ type: 'close' }]
-          });
+          if (tgApp.showPopup) {
+            tgApp.showPopup({
+              title: 'Загрузка данных',
+              message: 'Загружаем ваши данные из облака Telegram...',
+              buttons: [{ type: 'close' }]
+            });
+          }
           
           if (tgApp.HapticFeedback) {
-            tgApp.HapticFeedback.impactOccurred('medium');
+            tgApp.HapticFeedback.impactOccurred('light');
           }
         }
-      }
-      
-      // Сообщаем в консоль информацию о загруженных данных
-      console.log('Статус загрузки данных из облака:', {
-        notes: loadStatus.notes,
-        finances: loadStatus.finances,
-        debts: loadStatus.debts,
-        settings: loadStatus.settings
-      });
-      
-      // Если есть изменения и страница уже загружена, перезагружаем её для применения изменений
-      if (hasChanges && document.readyState === 'complete') {
-        setLoadingStep('Обновление страницы...');
-        console.log('Обнаружены изменения в данных, перезагрузка страницы...');
-        setTimeout(() => {
-          window.location.reload();
-        }, 1500);
-      } else {
+        
+        console.log('Загрузка данных из облака Telegram...');
+        
+        // Получаем данные из результата проверки облака
+        const notes = cloudData[STORAGE_KEYS.NOTES];
+        const finances = cloudData[STORAGE_KEYS.FINANCES];
+        const debts = cloudData[STORAGE_KEYS.DEBTS];
+        const settings = cloudData[STORAGE_KEYS.SETTINGS];
+        
+        let dataLoaded = false;
+        let hasChanges = false;
+        
+        // Обновляем статус заметок
+        if (notes && Array.isArray(notes)) {
+          setLoadingStep('Применение заметок...');
+          const notesChanged = applyLoadedData('notes', notes);
+          dataLoaded = true;
+          hasChanges = hasChanges || notesChanged;
+          console.log('Заметки успешно загружены из облака:', notes.length);
+          setLoadStatus(prev => ({
+            ...prev,
+            notes: { isLoaded: true, count: notes.length, error: null, timestamp: Date.now() }
+          }));
+        } else {
+          setLoadStatus(prev => ({
+            ...prev,
+            notes: { isLoaded: false, count: null, error: 'Заметки не найдены', timestamp: null }
+          }));
+        }
+        
+        // Обновляем статус финансов
+        if (finances && Array.isArray(finances)) {
+          setLoadingStep('Применение финансов...');
+          const financesChanged = applyLoadedData('finances', finances);
+          dataLoaded = true;
+          hasChanges = hasChanges || financesChanged;
+          console.log('Финансы успешно загружены из облака:', finances.length);
+          setLoadStatus(prev => ({
+            ...prev,
+            finances: { isLoaded: true, count: finances.length, error: null, timestamp: Date.now() }
+          }));
+        } else {
+          setLoadStatus(prev => ({
+            ...prev,
+            finances: { isLoaded: false, count: null, error: 'Финансы не найдены', timestamp: null }
+          }));
+        }
+        
+        // Обновляем статус долгов
+        if (debts && Array.isArray(debts)) {
+          setLoadingStep('Применение долгов...');
+          const debtsChanged = applyLoadedData('debts', debts);
+          dataLoaded = true;
+          hasChanges = hasChanges || debtsChanged;
+          console.log('Долги успешно загружены из облака:', debts.length);
+          setLoadStatus(prev => ({
+            ...prev,
+            debts: { isLoaded: true, count: debts.length, error: null, timestamp: Date.now() }
+          }));
+        } else {
+          setLoadStatus(prev => ({
+            ...prev,
+            debts: { isLoaded: false, count: null, error: 'Долги не найдены', timestamp: null }
+          }));
+        }
+        
+        // Обновляем статус настроек
+        if (settings && typeof settings === 'object') {
+          setLoadingStep('Применение настроек...');
+          const settingsChanged = applyLoadedData('settings', settings);
+          dataLoaded = true;
+          hasChanges = hasChanges || settingsChanged;
+          console.log('Настройки успешно загружены из облака');
+          setLoadStatus(prev => ({
+            ...prev,
+            settings: { isLoaded: true, count: 1, error: null, timestamp: Date.now() }
+          }));
+        } else {
+          setLoadStatus(prev => ({
+            ...prev,
+            settings: { isLoaded: false, count: null, error: 'Настройки не найдены', timestamp: null }
+          }));
+        }
+        
+        // Устанавливаем шаг загрузки
+        setLoadingStep(dataLoaded ? 'Данные успешно загружены' : 'Данные не найдены');
+        
+        // Записываем флаг, что данные загружены в этой сессии
+        sessionStorage.setItem(STORAGE_KEYS.SESSION_LOADED, 'true');
+        
+        // Сохраняем время последней загрузки
+        const now = new Date();
+        setLastLoadTime(now.toLocaleString());
+        
+        // Показываем уведомление об успешной загрузке данных
+        if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
+          const tgApp = window.Telegram.WebApp;
+          
+          if (dataLoaded && tgApp.showPopup) {
+            const loadedItems = [];
+            if (loadStatus.notes.isLoaded) loadedItems.push(`Заметки (${loadStatus.notes.count})`);
+            if (loadStatus.finances.isLoaded) loadedItems.push(`Финансы (${loadStatus.finances.count})`);
+            if (loadStatus.debts.isLoaded) loadedItems.push(`Долги (${loadStatus.debts.count})`);
+            if (loadStatus.settings.isLoaded) loadedItems.push('Настройки');
+            
+            const message = loadedItems.length > 0 
+              ? `Загружено: ${loadedItems.join(', ')}`
+              : 'Данные не найдены в облаке';
+            
+            tgApp.showPopup({
+              title: 'Данные загружены',
+              message,
+              buttons: [{ type: 'close' }]
+            });
+            
+            if (tgApp.HapticFeedback) {
+              tgApp.HapticFeedback.impactOccurred('medium');
+            }
+          }
+        }
+        
+        // Сообщаем в консоль информацию о загруженных данных
+        console.log('Статус загрузки данных из облака:', {
+          notes: loadStatus.notes,
+          finances: loadStatus.finances,
+          debts: loadStatus.debts,
+          settings: loadStatus.settings
+        });
+        
+        // Если есть изменения и страница уже загружена, перезагружаем её для применения изменений
+        if (hasChanges && document.readyState === 'complete') {
+          setLoadingStep('Обновление страницы...');
+          console.log('Обнаружены изменения в данных, перезагрузка страницы...');
+          setTimeout(() => {
+            window.location.reload();
+          }, 1500);
+        } else {
+          // Скрываем индикатор загрузки через 3 секунды
+          setTimeout(() => {
+            setIsLoading(false);
+            setLoadingStep('');
+          }, 1500);
+        }
+        
+        return dataLoaded;
+      } catch (error) {
+        console.error('Ошибка при загрузке данных из облака:', error);
+        setLoadError('Не удалось загрузить данные из облака');
+        setLoadingStep('Ошибка загрузки данных');
+        
+        // Показываем уведомление об ошибке
+        if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
+          const tgApp = window.Telegram.WebApp;
+          
+          if (tgApp.showPopup) {
+            tgApp.showPopup({
+              title: 'Ошибка загрузки',
+              message: 'Не удалось загрузить данные из облака Telegram. Пожалуйста, попробуйте позже.',
+              buttons: [{ type: 'close' }]
+            });
+            
+            if (tgApp.HapticFeedback) {
+              tgApp.HapticFeedback.impactOccurred('error');
+            }
+          }
+        }
+        
         // Скрываем индикатор загрузки через 3 секунды
         setTimeout(() => {
           setIsLoading(false);
           setLoadingStep('');
-        }, 1500);
+        }, 3000);
+        
+        return false;
       }
-      
-      return dataLoaded;
     } catch (error) {
       console.error('Ошибка при загрузке данных из облака:', error);
       setLoadError('Не удалось загрузить данные из облака');
@@ -555,8 +600,6 @@ export function CloudStorageProvider({ children }: CloudStorageProviderProps) {
       }, 3000);
       
       return false;
-    } finally {
-      // setIsLoading(false);
     }
   };
 
@@ -595,6 +638,18 @@ export function CloudStorageProvider({ children }: CloudStorageProviderProps) {
           </div>
         </div>
       )}
+      
+      {loadError && (
+        <div className="fixed top-0 left-0 right-0 z-50">
+          <div className="bg-destructive text-white text-xs flex items-center justify-between px-3 py-2">
+            <div className="flex items-center">
+              <span className="mr-2">⚠️</span>
+              <span>Ошибка: {loadError}</span>
+            </div>
+          </div>
+        </div>
+      )}
+      
       {children}
     </CloudStorageContext.Provider>
   );

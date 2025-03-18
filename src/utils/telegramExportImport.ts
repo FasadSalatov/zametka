@@ -37,20 +37,35 @@ export function isTelegramWebAppAvailable(): boolean {
 }
 
 /**
- * Проверяет доступность CloudStorage API
+ * Проверяет доступность CloudStorage в Telegram API
  */
 export function isCloudStorageAvailable(): boolean {
   try {
-    // @ts-ignore
-    return isTelegramWebAppAvailable() &&   
-           // @ts-ignore
-           !!window.Telegram.WebApp.CloudStorage && 
-           // @ts-ignore
-           typeof window.Telegram.WebApp.CloudStorage.getItem === 'function' &&
-           // @ts-ignore
-           typeof window.Telegram.WebApp.CloudStorage.setItem === 'function';
+    if (typeof window === 'undefined') return false;
+    
+    if (!window.Telegram || !window.Telegram.WebApp) {
+      console.log('WebApp API недоступен');
+      return false;
+    }
+    
+    const tgApp = window.Telegram.WebApp;
+    
+    // Проверяем наличие API CloudStorage
+    if (!tgApp.CloudStorage) {
+      console.log('CloudStorage API недоступен');
+      return false;
+    }
+    
+    // Проверяем необходимые методы CloudStorage
+    if (typeof tgApp.CloudStorage.getItem !== 'function' || 
+        typeof tgApp.CloudStorage.setItem !== 'function') {
+      console.log('CloudStorage API неполный: отсутствуют необходимые методы');
+      return false;
+    }
+    
+    return true;
   } catch (e) {
-    console.error('Ошибка при проверке CloudStorage API:', e);
+    console.error('Ошибка при проверке доступности CloudStorage:', e);
     return false;
   }
 }
