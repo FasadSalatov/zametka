@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { exportDataWithTelegram, importDataWithTelegram, saveToTelegramCloud, loadFromTelegramCloud } from '@/utils/telegramExportImport';
 import { Button } from '@/components/ui/Button';
 
@@ -10,7 +10,11 @@ const STORAGE_KEYS = {
   FINANCES: 'zametka_finances_data',
   DEBTS: 'zametka_debts_data',
   SETTINGS: 'zametka_settings',
+  LAST_CLOUD_SAVE: 'zametka_last_cloud_save',
 };
+
+// Интервал автоматического сохранения (30 минут)
+const AUTO_SAVE_INTERVAL = 30 * 60 * 1000;
 
 interface SettingsExportImportProps {
   onDataImported?: (data: any) => void;
@@ -22,9 +26,12 @@ export default function SettingsExportImport({ onDataImported, onError }: Settin
     exportAll: false,
     importAll: false,
     saveToCloud: false,
-    loadFromCloud: false
+    loadFromCloud: false,
+    autoSave: false
   });
   const [lastAction, setLastAction] = useState<string | null>(null);
+  const [lastAutoSave, setLastAutoSave] = useState<string | null>(null);
+  const [autoSaveEnabled, setAutoSaveEnabled] = useState<boolean>(true);
 
   // Получение всех данных из localStorage
   const getAllData = () => {
@@ -126,6 +133,10 @@ export default function SettingsExportImport({ onDataImported, onError }: Settin
       const settingsSaved = await saveToTelegramCloud(STORAGE_KEYS.SETTINGS, data.settings);
       
       if (notesSaved && financesSaved && debtsSaved && settingsSaved) {
+        // Сохраняем время последнего сохранения
+        const now = new Date();
+        await saveToTelegramCloud(STORAGE_KEYS.LAST_CLOUD_SAVE, now.toISOString());
+        setLastAutoSave(new Date().toLocaleString());
         setLastAction('Данные успешно сохранены в облако Telegram');
       } else {
         throw new Error('Не все данные удалось сохранить в облако');
@@ -172,6 +183,138 @@ export default function SettingsExportImport({ onDataImported, onError }: Settin
     }
   };
 
+  // Автоматическое сохранение данных в облако
+  const performAutoSave = async () => {
+    if (!autoSaveEnabled) return;
+    
+    try {
+      setLoading({...loading, autoSave: true});
+      console.log('Выполняется автоматическое сохранение данных в облако...');
+      
+      const data = getAllData();
+      if (!data) {
+        console.error('Не удалось получить данные для автосохранения');
+        return;
+      }
+      
+      // Проверяем, есть ли изменения, которые нужно сохранить
+      const hasNotesData = Array.isArray(data.notes) && data.notes.length > 0;
+      const hasFinancesData = Array.isArray(data.finances) && data.finances.length > 0;
+      const hasDebtsData = Array.isArray(data.debts) && data.debts.length > 0;
+      
+      if (!hasNotesData && !hasFinancesData && !hasDebtsData) {
+        console.log('Нет данных для автосохранения');
+        return;
+      }
+      
+      // Сохраняем данные в облако
+      const notesSaved = hasNotesData ? await saveToTelegramCloud(STORAGE_KEYS.NOTES, data.notes) : true;
+      const financesSaved = hasFinancesData ? await saveToTelegramCloud(STORAGE_KEYS.FINANCES, data.finances) : true;
+      const debtsSaved = hasDebtsData ? await saveToTelegramCloud(STORAGE_KEYS.DEBTS, data.debts) : true;
+      const settingsSaved = await saveToTelegramCloud(STORAGE_KEYS.SETTINGS, data.settings);
+      
+      if (notesSaved && financesSaved && debtsSaved && settingsSaved) {
+        // Сохраняем время последнего сохранения
+        const now = new Date();
+        await saveToTelegramCloud(STORAGE_KEYS.LAST_CLOUD_SAVE, now.toISOString());
+        setLastAutoSave(now.toLocaleString());
+        console.log('Автоматическое сохранение выполнено успешно:', now.toLocaleString());
+      } else {
+        console.error('Не все данные удалось автоматически сохранить в облако');
+      }
+    } catch (error) {
+      console.error('Ошибка при автоматическом сохранении:', error);
+    } finally {
+      setLoading({...loading, autoSave: false});
+    }
+  };
+
+  // Загрузка информации о последнем сохранении
+  useEffect(() => {
+    const loadLastSaveInfo = async () => {
+      try {
+        const lastSave = await loadFromTelegramCloud(STORAGE_KEYS.LAST_CLOUD_SAVE);
+        if (lastSave) {
+          try {
+            const date = new Date(lastSave);
+            setLastAutoSave(date.toLocaleString());
+          } catch (e) {
+            console.error('Ошибка при парсинге даты последнего сохранения:', e);
+          }
+        }
+      } catch (e) {
+        console.error('Ошибка при загрузке информации о последнем сохранении:', e);
+      }
+    };
+    
+    loadLastSaveInfo();
+  }, []);
+
+  // Настройка периодического автосохранения
+  useEffect(() => {
+    // Функция, которая проверяет, нужно ли выполнить автосохранение
+    const checkAndPerformAutoSave = async () => {
+      if (!autoSaveEnabled) return;
+      
+      try {
+        // Получаем время последнего сохранения
+        const lastSave = await loadFromTelegramCloud(STORAGE_KEYS.LAST_CLOUD_SAVE);
+        
+        // Если нет информации о последнем сохранении или прошло больше интервала
+        if (!lastSave) {
+          performAutoSave();
+          return;
+        }
+        
+        try {
+          const lastSaveDate = new Date(lastSave);
+          const now = new Date();
+          const timeSinceLastSave = now.getTime() - lastSaveDate.getTime();
+          
+          if (timeSinceLastSave >= AUTO_SAVE_INTERVAL) {
+            performAutoSave();
+          } else {
+            console.log(`Время до следующего автосохранения: ${Math.floor((AUTO_SAVE_INTERVAL - timeSinceLastSave) / 1000 / 60)} минут`);
+          }
+        } catch (e) {
+          console.error('Ошибка при проверке времени последнего сохранения:', e);
+        }
+      } catch (e) {
+        console.error('Ошибка при проверке автосохранения:', e);
+      }
+    };
+    
+    // Проверяем при загрузке компонента
+    checkAndPerformAutoSave();
+    
+    // Устанавливаем интервал для проверки
+    const intervalId = setInterval(checkAndPerformAutoSave, 5 * 60 * 1000); // Проверка каждые 5 минут
+    
+    return () => clearInterval(intervalId);
+  }, [autoSaveEnabled]);
+
+  // Обработчик изменения данных в localStorage
+  useEffect(() => {
+    const handleStorageChange = () => {
+      // Если данные изменились, запланируем автосохранение через небольшую задержку
+      // для предотвращения частых сохранений при множественных изменениях
+      if (autoSaveEnabled) {
+        const timer = setTimeout(() => {
+          performAutoSave();
+        }, 10000); // Задержка 10 секунд после последнего изменения
+        
+        return () => clearTimeout(timer);
+      }
+    };
+    
+    // Добавляем слушатель событий для изменений в localStorage
+    window.addEventListener('storage', handleStorageChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, [autoSaveEnabled]);
+
   return (
     <div className="space-y-4">
       {/* Действия с данными */}
@@ -199,7 +342,7 @@ export default function SettingsExportImport({ onDataImported, onError }: Settin
             <Button 
               variant="accent" 
               onClick={handleSaveToCloud} 
-              disabled={loading.saveToCloud}
+              disabled={loading.saveToCloud || loading.autoSave}
               data-haptic="medium"
               className="h-12 text-base flex justify-center items-center"
             >
@@ -208,7 +351,7 @@ export default function SettingsExportImport({ onDataImported, onError }: Settin
                 <polyline points="17 8 12 3 7 8"></polyline>
                 <line x1="12" y1="3" x2="12" y2="15"></line>
               </svg>
-              {loading.saveToCloud ? 'Сохранение...' : 'Сохранить в облако TG'}
+              {(loading.saveToCloud || loading.autoSave) ? 'Сохранение...' : 'Сохранить в облако TG'}
             </Button>
           </div>
         </div>
@@ -249,6 +392,32 @@ export default function SettingsExportImport({ onDataImported, onError }: Settin
             </Button>
           </div>
         </div>
+      </div>
+      
+      {/* Настройки автосохранения */}
+      <div className="mt-3 px-3 py-2 border border-border rounded-lg bg-muted/20">
+        <div className="flex items-center justify-between mb-2">
+          <div>
+            <h3 className="text-sm font-medium">Автосохранение</h3>
+            <p className="text-xs text-muted-foreground">Сохраняет данные в облако автоматически</p>
+          </div>
+          <label className="relative inline-flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              checked={autoSaveEnabled}
+              onChange={() => setAutoSaveEnabled(!autoSaveEnabled)}
+              className="sr-only peer"
+              data-haptic="light"
+            />
+            <div className="w-11 h-6 bg-muted peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+          </label>
+        </div>
+        
+        {lastAutoSave && (
+          <div className="text-xs text-muted-foreground">
+            Последнее сохранение: {lastAutoSave}
+          </div>
+        )}
       </div>
       
       {/* Сообщение о результате операции */}

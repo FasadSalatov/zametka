@@ -2,16 +2,16 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/providers/theme-provider";
+import { CloudStorageProvider } from "@/components/providers/cloud-storage-provider";
 import { Navbar } from "@/components/navbar";
 import Footer from "@/components/Footer";
 import Script from "next/script";
 
-const inter = Inter({ subsets: ["latin", "cyrillic"], variable: "--font-inter" });
+const inter = Inter({ subsets: ["latin", "cyrillic"] });
 
 export const metadata: Metadata = {
-  title: "Zametka - Личный сервис",
-  description: "Мой личный сервис для заметок и финансов",
-  viewport: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0, viewport-fit=cover",
+  title: "Zametka",
+  description: "Личный менеджер заметок, финансов и списка долгов",
 };
 
 export default function RootLayout({
@@ -20,128 +20,85 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ru" suppressHydrationWarning className="scroll-smooth">
+    <html lang="ru" suppressHydrationWarning>
       <head>
-        <Script 
-          src="https://telegram.org/js/telegram-web-app.js?56"
-          strategy="beforeInteractive" 
-        />
-        <Script id="safe-area-init" strategy="afterInteractive">
-          {`
-            // Инициализация CSS переменных safe area при загрузке страницы
-            function updateSafeArea() {
-              if (window.Telegram && window.Telegram.WebApp) {
-                const tgApp = window.Telegram.WebApp;
-                const html = document.documentElement;
+        {/* Скрипт инициализации CSS-переменных безопасных зон */}
+        <script dangerouslySetInnerHTML={{
+          __html: `
+            (function initSafeAreaVars() {
+              // Объявляем CSS-переменные для безопасных зон
+              function setSafeAreaVars() {
+                // Получаем данные о безопасных зонах из Telegram WebApp
+                let safeAreaTop = 0;
+                let safeAreaBottom = 0;
+                let safeAreaLeft = 0;
+                let safeAreaRight = 0;
                 
-                if (tgApp.version && typeof tgApp.isVersionAtLeast === 'function' && tgApp.isVersionAtLeast('8.0')) {
-                  // Обрабатываем системные safe area insets (notch, navigation bar и т.д.)
-                  if (tgApp.safeAreaInset) {
-                    console.log('Telegram safeAreaInset:', tgApp.safeAreaInset);
-                    html.style.setProperty('--tg-safe-area-inset-top', tgApp.safeAreaInset.top + 'px');
-                    html.style.setProperty('--tg-safe-area-inset-right', tgApp.safeAreaInset.right + 'px');
-                    html.style.setProperty('--tg-safe-area-inset-bottom', tgApp.safeAreaInset.bottom + 'px');
-                    html.style.setProperty('--tg-safe-area-inset-left', tgApp.safeAreaInset.left + 'px');
-                    
-                    // Добавляем класс для отображения информации
-                    html.classList.add('has-tg-safe-area');
+                // Проверяем, доступен ли Telegram WebApp API
+                if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
+                  const viewportHeight = window.Telegram.WebApp.viewportHeight;
+                  const viewportStableHeight = window.Telegram.WebApp.viewportStableHeight;
+                  
+                  // Рассчитываем безопасную зону внизу (для клавиатуры)
+                  if (viewportHeight && viewportStableHeight) {
+                    safeAreaBottom = Math.max(0, viewportHeight - viewportStableHeight);
                   }
                   
-                  // Обрабатываем content safe area insets (учитывая UI элементы Telegram)
-                  if (tgApp.contentSafeAreaInset) {
-                    console.log('Telegram contentSafeAreaInset:', tgApp.contentSafeAreaInset);
-                    html.style.setProperty('--tg-content-safe-area-inset-top', tgApp.contentSafeAreaInset.top + 'px');
-                    html.style.setProperty('--tg-content-safe-area-inset-right', tgApp.contentSafeAreaInset.right + 'px');
-                    html.style.setProperty('--tg-content-safe-area-inset-bottom', tgApp.contentSafeAreaInset.bottom + 'px');
-                    html.style.setProperty('--tg-content-safe-area-inset-left', tgApp.contentSafeAreaInset.left + 'px');
-                    
-                    // Добавляем класс для отображения информации
-                    html.classList.add('has-tg-content-safe-area');
+                  // Если доступны данные о безопасных зонах от WebApp
+                  if (window.Telegram.WebApp.safeAreaInsets) {
+                    safeAreaTop = window.Telegram.WebApp.safeAreaInsets.top || 0;
+                    safeAreaBottom = Math.max(
+                      safeAreaBottom, 
+                      window.Telegram.WebApp.safeAreaInsets.bottom || 0
+                    );
+                    safeAreaLeft = window.Telegram.WebApp.safeAreaInsets.left || 0;
+                    safeAreaRight = window.Telegram.WebApp.safeAreaInsets.right || 0;
                   }
-                } else {
-                  // Версия Telegram не поддерживает safe area API, используем CSS env()
-                  console.log('Telegram version does not support safe area API, using CSS env() variables');
                 }
                 
-                // Устанавливаем обработчики событий для обновления в случае изменения safe area
-                if (tgApp.onEvent) {
-                  tgApp.onEvent('safeAreaChanged', updateSafeArea);
-                  tgApp.onEvent('contentSafeAreaChanged', updateSafeArea);
-                  tgApp.onEvent('fullscreenChanged', updateSafeArea);
-                  
-                  // Сообщаем в консоль о результатах инициализации
-                  console.log('Safe area event handlers initialized');
-                }
+                // Устанавливаем максимальные значения между стандартными iOS-переменными и значениями из Telegram
+                document.documentElement.style.setProperty('--combined-safe-area-inset-top', 
+                  \`max(env(safe-area-inset-top, 0px), \${safeAreaTop}px)\`);
+                document.documentElement.style.setProperty('--combined-safe-area-inset-bottom', 
+                  \`max(env(safe-area-inset-bottom, 0px), \${safeAreaBottom}px)\`);
+                document.documentElement.style.setProperty('--combined-safe-area-inset-left', 
+                  \`max(env(safe-area-inset-left, 0px), \${safeAreaLeft}px)\`);
+                document.documentElement.style.setProperty('--combined-safe-area-inset-right', 
+                  \`max(env(safe-area-inset-right, 0px), \${safeAreaRight}px)\`);
                 
-                // Сообщаем Telegram, что приложение готово
-                if (tgApp.ready) {
-                  tgApp.ready();
+                // Определяем, является ли устройство сенсорным
+                if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
+                  document.documentElement.classList.add('touch-device');
                 }
-              } else {
-                console.log('Telegram WebApp API not available');
-              }
-            }
-            
-            // Запускаем инициализацию после полной загрузки страницы
-            function initSafeArea() {
-              console.log('Initializing safe area');
-              updateSafeArea();
-              
-              // Отображаем текущие значения env() переменных
-              const computedStyle = getComputedStyle(document.documentElement);
-              console.log('CSS env safe-area-inset-top:', computedStyle.getPropertyValue('--safe-area-inset-top'));
-              console.log('CSS env safe-area-inset-bottom:', computedStyle.getPropertyValue('--safe-area-inset-bottom'));
-              
-              // Добавляем класс для touch-устройств
-              if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
-                document.documentElement.classList.add('touch-device');
               }
               
-              // Добавляем глобальный обработчик для тактильной обратной связи на кнопках
-              if (window.Telegram && window.Telegram.WebApp) {
-                document.addEventListener('click', function(e) {
-                  // Проверяем, является ли целевой элемент кнопкой или его родителем является кнопка
-                  const target = e.target;
-                  const button = target.tagName === 'BUTTON' ? target : target.closest('button');
-                  const interactiveElement = 
-                    button || 
-                    target.closest('a[role="button"]') || 
-                    target.closest('.btn') || 
-                    (target.className && typeof target.className === 'string' && target.className.includes('btn')) ||
-                    target.closest('[data-haptic]');
-                    
-                  if (interactiveElement && window.Telegram.WebApp.HapticFeedback) {
-                    // Получаем силу вибрации из атрибута data-haptic или используем medium по умолчанию
-                    const hapticType = interactiveElement.getAttribute('data-haptic') || 'medium';
-                    try {
-                      window.Telegram.WebApp.HapticFeedback.impactOccurred(hapticType);
-                    } catch (err) {
-                      console.warn('Failed to trigger haptic feedback:', err);
-                    }
-                  }
-                }, false);
-                console.log('Haptic feedback initialized for all buttons');
+              // Устанавливаем переменные при загрузке
+              setSafeAreaVars();
+              
+              // Добавляем слушатель событий изменения размера окна
+              window.addEventListener('resize', setSafeAreaVars);
+              
+              // Слушаем событие изменения viewportHeight в Telegram WebApp
+              if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
+                window.Telegram.WebApp.onEvent('viewportChanged', setSafeAreaVars);
               }
-            }
-            
-            if (document.readyState === 'complete') {
-              initSafeArea();
-            } else {
-              window.addEventListener('load', initSafeArea);
-            }
-          `}
-        </Script>
+            })();
+          `
+        }} />
       </head>
-      <body className={`${inter.className} antialiased overflow-x-hidden`}>
+      <body className={inter.className}>
         <ThemeProvider defaultTheme="dark">
-          <div className="min-h-screen flex flex-col">
-            <Navbar />
-            <main className="flex-1 w-full px-3 sm:px-4 py-4 sm:py-6 mx-auto max-w-full sm:max-w-7xl">
-              {children}
-            </main>
-            <Footer />
-          </div>
+          <CloudStorageProvider>
+            <div className="flex flex-col min-h-screen">
+              <Navbar />
+              <main className="flex-1 container mx-auto px-3 py-4 pt-20 pb-24">
+                {children}
+              </main>
+              <Footer />
+            </div>
+          </CloudStorageProvider>
         </ThemeProvider>
+        <Script src="https://telegram.org/js/telegram-web-app.js" strategy="beforeInteractive" />
       </body>
     </html>
   );
