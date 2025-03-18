@@ -1,101 +1,134 @@
 "use client";
 
+import { useState, useEffect } from 'react';
 import { useTelegramWebApp } from '@/hooks/useTelegramWebApp';
-import { useEffect, useState } from 'react';
 
-type TelegramFullscreenButtonProps = {
+interface FullscreenButtonProps {
   buttonText?: string;
   exitButtonText?: string;
   className?: string;
   showVersionWarning?: boolean;
-};
+}
 
-export default function TelegramFullscreenButton({
-  buttonText = "Развернуть на весь экран",
-  exitButtonText = "Выйти из полноэкранного режима",
+const TelegramFullscreenButton = ({ 
+  buttonText = "Полноэкранный режим", 
+  exitButtonText = "Выйти из полноэкрана",
   className = "",
-  showVersionWarning = false
-}: TelegramFullscreenButtonProps) {
-  const { isAvailable, isFullscreenSupported, isFullscreen, toggleFullscreen, version } = useTelegramWebApp();
+  showVersionWarning = true
+}: FullscreenButtonProps) => {
+  const { isAvailable, isFullscreenSupported, isFullscreen, toggleFullscreen } = useTelegramWebApp();
   const [showWarning, setShowWarning] = useState(false);
 
-  // Показываем предупреждение один раз при загрузке, если функция не поддерживается
   useEffect(() => {
+    // Отображаем предупреждение, если полноэкранный режим не поддерживается
     if (isAvailable && !isFullscreenSupported && showVersionWarning) {
       setShowWarning(true);
       const timer = setTimeout(() => {
         setShowWarning(false);
-      }, 5000);
+      }, 3000);
       
       return () => clearTimeout(timer);
     }
-  }, [isAvailable, isFullscreenSupported, showVersionWarning]);
+    
+    // Загружаем сохраненное состояние полноэкранного режима при первом рендеринге
+    if (isAvailable && isFullscreenSupported && typeof window !== 'undefined' && window.Telegram?.WebApp) {
+      const tgApp = window.Telegram.WebApp;
+      
+      // @ts-ignore - CloudStorage существует в новых версиях API 
+      if (tgApp.CloudStorage) {
+        // @ts-ignore - CloudStorage существует в новых версиях API
+        tgApp.CloudStorage.getItem('fullscreen_enabled', (err: any, value: string | null) => {
+          if (!err && value === 'true' && !isFullscreen) {
+            // Восстанавливаем полноэкранный режим с небольшой задержкой
+            setTimeout(() => {
+              toggleFullscreen();
+            }, 1000);
+          }
+        });
+      }
+    }
+  }, [isAvailable, isFullscreenSupported, showVersionWarning, isFullscreen, toggleFullscreen]);
 
-  // Если Telegram API не доступен, вообще не отображаем ничего
+  // Сохраняем состояние полноэкранного режима при его изменении
+  useEffect(() => {
+    if (isAvailable && isFullscreenSupported && typeof window !== 'undefined' && window.Telegram?.WebApp) {
+      const tgApp = window.Telegram.WebApp;
+      
+      // @ts-ignore - CloudStorage существует в новых версиях API
+      if (tgApp.CloudStorage && isFullscreen !== null) {
+        // @ts-ignore - CloudStorage существует в новых версиях API
+        tgApp.CloudStorage.setItem('fullscreen_enabled', isFullscreen ? 'true' : 'false');
+      }
+    }
+  }, [isAvailable, isFullscreenSupported, isFullscreen]);
+
+  // Обертка для добавления тактильной обратной связи
+  const handleToggleFullscreen = () => {
+    if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
+      // @ts-ignore - HapticFeedback существует в новых версиях API
+      if (window.Telegram.WebApp.HapticFeedback) {
+        // @ts-ignore - HapticFeedback существует в новых версиях API
+        window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
+      }
+      toggleFullscreen();
+    }
+  };
+
   if (!isAvailable) {
     return null;
   }
 
-  // Если полноэкранный режим не поддерживается, но отображаем предупреждение
   if (!isFullscreenSupported) {
     return showWarning ? (
-      <div className="hidden sm:block text-xs text-yellow-500 animate-pulse">
-        {version ? `Полноэкранный режим доступен с версии 8.0 (текущая: ${version})` : 'Полноэкранный режим не поддерживается'}
+      <div className="text-xs text-yellow-500 animate-pulse">
+        Для полноэкранного режима требуется Telegram 8.0+
       </div>
     ) : null;
   }
 
-  // Если текст кнопки пустой, показываем только иконку (для мобильных устройств)
-  const showIconOnly = buttonText === '' && exitButtonText === '';
-
   return (
-    <button
-      onClick={toggleFullscreen}
-      className={`bg-primary hover:bg-primary/90 text-primary-foreground rounded-md text-sm font-medium shadow-sm transition-all hover-lift flex items-center gap-2 ${showIconOnly ? 'p-2' : 'px-3 py-2'} ${className}`}
-      type="button"
-      aria-label={isFullscreen ? "Выйти из полноэкранного режима" : "Развернуть на весь экран"}
-    >
-      {isFullscreen ? (
-        <>
-          <svg 
-            xmlns="http://www.w3.org/2000/svg" 
-            width="16" 
-            height="16" 
-            viewBox="0 0 24 24" 
-            fill="none" 
-            stroke="currentColor" 
-            strokeWidth="2" 
-            strokeLinecap="round" 
+    <>
+      <button
+        onClick={handleToggleFullscreen}
+        className={`px-3 py-2 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors text-sm ${className}`}
+      >
+        {buttonText && exitButtonText ? (isFullscreen ? exitButtonText : buttonText) : (
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
             strokeLinejoin="round"
           >
-            <polyline points="4 14 10 14 10 20"></polyline>
-            <polyline points="20 10 14 10 14 4"></polyline>
-            <line x1="14" y1="10" x2="21" y2="3"></line>
-            <line x1="3" y1="21" x2="10" y2="14"></line>
+            {isFullscreen ? (
+              <>
+                <path d="M8 3v3a2 2 0 0 1-2 2H3"></path>
+                <path d="M21 8h-3a2 2 0 0 1-2-2V3"></path>
+                <path d="M3 16h3a2 2 0 0 1 2 2v3"></path>
+                <path d="M16 21v-3a2 2 0 0 1 2-2h3"></path>
+              </>
+            ) : (
+              <>
+                <path d="M3 8V5a2 2 0 0 1 2-2h3"></path>
+                <path d="M16 3h3a2 2 0 0 1 2 2v3"></path>
+                <path d="M21 16v3a2 2 0 0 1-2 2h-3"></path>
+                <path d="M8 21H5a2 2 0 0 1-2-2v-3"></path>
+              </>
+            )}
           </svg>
-          {!showIconOnly && exitButtonText}
-        </>
-      ) : (
-        <>
-          <svg 
-            xmlns="http://www.w3.org/2000/svg" 
-            width="16" 
-            height="16" 
-            viewBox="0 0 24 24" 
-            fill="none" 
-            stroke="currentColor" 
-            strokeWidth="2" 
-            strokeLinecap="round" 
-            strokeLinejoin="round"
-          >
-            <polyline points="15 3 21 3 21 9"></polyline>
-            <polyline points="9 21 3 21 3 15"></polyline>
-            <line x1="21" y1="3" x2="14" y2="10"></line>
-            <line x1="3" y1="21" x2="10" y2="14"></line>
-          </svg>
-          {!showIconOnly && buttonText}
-        </>
+        )}
+      </button>
+      {showWarning && (
+        <div className="absolute top-full left-0 right-0 mt-2 text-xs bg-yellow-500/20 text-yellow-500 p-2 rounded-lg animate-fadeIn">
+          Ошибка активации полноэкранного режима
+        </div>
       )}
-    </button>
+    </>
   );
-} 
+};
+
+export default TelegramFullscreenButton; 

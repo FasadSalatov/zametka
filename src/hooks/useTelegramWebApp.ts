@@ -2,6 +2,26 @@
 
 import { useEffect, useState } from 'react';
 
+// Объявление типов для HapticFeedback
+type HapticFeedbackStyle = 'light' | 'medium' | 'heavy' | 'rigid' | 'soft';
+type HapticNotificationType = 'error' | 'success' | 'warning';
+
+interface HapticFeedback {
+  impactOccurred: (style: HapticFeedbackStyle) => void;
+  notificationOccurred: (type: HapticNotificationType) => void;
+  selectionChanged: () => void;
+}
+
+// Объявление типов для CloudStorage
+interface CloudStorage {
+  setItem: (key: string, value: string, callback?: (error: any, success: boolean) => void) => void;
+  getItem: (key: string, callback: (error: any, value: string | null) => void) => void;
+  getItems: (keys: string[], callback: (error: any, values: Record<string, string | null>) => void) => void;
+  removeItem: (key: string, callback?: (error: any, success: boolean) => void) => void;
+  removeItems: (keys: string[], callback?: (error: any, success: boolean) => void) => void;
+  getKeys: (callback: (error: any, keys: string[]) => void) => void;
+}
+
 // Объявление типов в глобальной области видимости
 type TelegramWebApp = {
   requestFullscreen?: () => void;
@@ -24,6 +44,8 @@ type TelegramWebApp = {
     bottom: number;
     left: number;
   };
+  HapticFeedback?: HapticFeedback;
+  CloudStorage?: CloudStorage;
 };
 
 interface Window {

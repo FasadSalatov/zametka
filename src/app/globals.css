@@ -473,6 +473,15 @@
   transition: transform 0.1s, border-color 0.2s;
 }
 
+/* Визуальный отклик на кнопках при нажатии */
+button:active, 
+.action-button:active, 
+.btn:active, 
+.btn-neon:active {
+  transform: scale(0.98);
+  transition: transform 0.1s ease;
+}
+
 /* Улучшенные стили для инпутов */
 input[type="text"],
 input[type="number"],
