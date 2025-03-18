@@ -468,16 +468,7 @@ export const TelegramStorageProvider: React.FC<{ children: ReactNode }> = ({ chi
 
   return (
     <TelegramStorageContext.Provider value={contextValue}>
-      {isLoading && (
-        <div className="fixed top-0 left-0 right-0 z-50">
-          <div className="bg-primary text-white text-xs flex items-center justify-between px-3 py-2">
-            <div className="flex items-center">
-              <div className="w-3 h-3 border-2 border-white/30 border-t-white/80 rounded-full animate-spin mr-2"></div>
-              <span>{loadingStep}</span>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Удаляем блок с уведомлением о загрузке */}
       
       {error && !isLoading && (
         <div className="fixed top-0 left-0 right-0 z-50">

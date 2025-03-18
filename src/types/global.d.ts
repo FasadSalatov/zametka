@@ -58,7 +58,7 @@ interface TelegramWebApp {
   HapticFeedback?: HapticFeedback;
   CloudStorage?: CloudStorage;
   showPopup?: (params: PopupParams, callback?: (buttonId: string) => void) => void;
-  showAlert?: (message: string, callback?: () => void) => void;
+  // showAlert?: (message: string, callback?: () => void) => void;
   showConfirm?: (message: string, callback?: (confirmed: boolean) => void) => void;
   openLink?: (url: string) => void;
   openTelegramLink?: (url: string) => void;
